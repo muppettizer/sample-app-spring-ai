@@ -1,3 +1,15 @@
+
 spring:
   application:
     name: sample-app-spring-ai
+  ai:
+    google:
+      genai:
+        api-key: ${GOOGLE_API_KEY}
+#    vertex:
+#      ai:
+#        gemini:
+#          project-id: ${VERTEX_AI_PROJECT_ID}
+#          location: ${VERTEX_AI_LOCATION}
+server:
+  port: 8081

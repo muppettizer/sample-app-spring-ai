@@ -1,0 +1,52 @@
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  //gap: 4px;
+  //padding: 3px 8px;
+  //border: 1px solid #d0d5dd;
+  //border-radius: 5px;
+  //background: #fff;
+  //cursor: pointer;
+  //font-size: 12px;
+  //font-family: inherit;
+  //color: #344054;
+  //transition: all 0.15s ease;
+  //white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #f2f4f7;
+    border-color: #98a2b3;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.loading {
+    background: #f9f5ff;
+    border-color: #7f56d9;
+    color: #7f56d9;
+  }
+}
+
+.spinner {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #7f56d9;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

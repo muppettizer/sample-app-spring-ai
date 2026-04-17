@@ -1,0 +1,18 @@
+<div class="actions-cell">
+  @for (action of actions; track action.id) {
+    <button
+      class="action-btn"
+      [class.loading]="loadingAction === action.id"
+      [disabled]="!!loadingAction"
+      (click)="runAction(action)"
+      [title]="action.label"
+    >
+      <span class="action-icon">{{ action.icon }}</span>
+      <span class="action-label">{{ action.label }}</span>
+
+      @if (loadingAction === action.id) {
+        <span class="spinner"></span>
+      }
+    </button>
+  }
+</div>

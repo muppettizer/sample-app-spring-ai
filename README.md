@@ -100,3 +100,24 @@ docker-compose up --build
 docker-compose down
 
 ```
+
+
+# Frontend
+
+```sh
+npm install -g @angular/cli
+ng version
+
+# Create a new Angular project
+ng new frontend
+cd frontend
+
+# Run it once
+ng serve
+
+# Dependencies
+npm install ag-grid-community@34 ag-grid-enterprise@34 ag-grid-angular
+
+# Compoennt
+ng generate component grid
+```
