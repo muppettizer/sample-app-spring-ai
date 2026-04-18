@@ -6,11 +6,12 @@ import { ToastrService } from 'ngx-toastr';
 import { GridAiService } from './grid-ai.service';
 import {NgIf} from '@angular/common';
 import {GridActionsCellRendererComponent} from './actions/grid-actions-cell-renderer.component';
+import {PromptsCellRendererComponent} from './actions/prompts-cell-renderer.component';
 
 @Component({
   selector: 'app-grid',
   standalone: true,
-  imports: [AgGridAngular, FormsModule],
+  imports: [AgGridAngular, FormsModule, GridActionsCellRendererComponent, PromptsCellRendererComponent],
   templateUrl: './grid.html',
   styles: [`
     .ask-ai-btn {
@@ -62,6 +63,16 @@ export class GridComponent implements OnInit {
     { field: 'model' },
     { field: 'price', filter: 'agNumberColumnFilter' },
     { field: 'country' },
+    {
+      headerName: 'Prompts',
+      field: 'prompts',
+      sortable: false,
+      filter: false,
+      suppressHeaderMenuButton: true,
+      resizable: false,
+      width: 160,
+      cellRenderer: PromptsCellRendererComponent,
+    },
     {
       headerName: 'Actions',
       field: 'actions',
