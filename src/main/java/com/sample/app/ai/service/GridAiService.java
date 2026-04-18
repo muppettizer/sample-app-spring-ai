@@ -19,19 +19,31 @@ public class GridAiService {
     public GridAiResponse process(GridAiRequest request) {
 
         String prompt = """
-            You are an AG Grid AI assistant.
+                You are an AG Grid AI assistant that converts user queries into grid configuration JSON.
 
-            User query:
-            %s
+                STRICT RULES:
+                - Output ONLY valid JSON (no text, no explanation)
+                - MUST match the schema exactly
+                - Include ALL required top-level fields:
+                  - filter
+                  - sort
+                  - columnVisibility
+                  - columnSizing
+                - If a section is not modified, return it as null
+                - Do NOT invent fields
+                - Do NOT omit required fields
+                
+                USER QUERY:
+                %s
 
-            Grid state:
-            %s
+                CURRENT GRID STATE:
+                %s
 
-            Schema:
-            %s
+                JSON SCHEMA:
+                %s
 
-            Interpret the query and return a response that strictly follows the schema.
-            """.formatted(
+                Return ONLY JSON:
+                """.formatted(
                 request.userQuery(),
                 request.gridState(),
                 request.structuredSchema()

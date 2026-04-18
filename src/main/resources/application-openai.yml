@@ -1,0 +1,12 @@
+# https://docs.spring.io/spring-ai/reference/api/chat/openai-chat.html
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.google.genai.autoconfigure.chat.GoogleGenAiChatAutoConfiguration
+  ai:
+    model:
+      chat: openai
+
+    # https://platform.openai.com/login?next=%2Fapi-keys
+    openai:
+      api-key: ${OPENAI_API_KEY}

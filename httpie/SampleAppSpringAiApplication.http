@@ -1,0 +1,362 @@
+###
+
+# curl http://localhost:8083/v1/models
+GET http://localhost:8083/readyz
+
+###
+# curl http://localhost:8083/v1/models
+GET http://localhost:8083/models
+
+###
+
+POST http://localhost:8083/v1/chat/completions
+Content-Type: application/json
+
+{
+  "model": "mistral",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Return JSON: {\"ok\": true}"
+    }
+  ]
+}
+
+###
+
+###
+
+# curl 'http://localhost:8081/api/ai/grid-query'
+# curl 'http://localhost:8081/api/ai/grid-query'
+#  -H 'Content-Type: application/json'
+#  --data-raw '{"userQuery":"remove price column","gridState":{"version":"35.2.1","sideBar":{"visible":false,"openToolPanel":null,"toolPanels":{}},"columnSizing":{"columnSizingModel":[{"colId":"make","width":200},{"colId":"model","width":200},{"colId":"price","width":200},{"colId":"country","width":200},{"colId":"actions","width":140}]},"columnOrder":{"orderedColIds":["make","model","price","country","actions"]},"filter":{"selectableFilters":{}},"rowGroupExpansion":{"expandedRowGroupIds":[],"collapsedRowGroupIds":[]},"pagination":{"page":0,"pageSize":100}},"structuredSchema":{"type":"object","required":["filter","sort","columnVisibility","columnSizing"],"additionalProperties":false,"properties":{"filter":{"type":["object","null"],"required":["filterModel"],"additionalProperties":false,"properties":{"filterModel":{"type":"object","required":["price"],"additionalProperties":false,"properties":{"price":{"type":["object","null"],"required":["filterType","operator","conditions"],"additionalProperties":false,"properties":{"filterType":{"type":"string","description":"Filter type identifier for number filters with multiple conditions","enum":["number"]},"operator":{"type":"string","description":"Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.","enum":["AND","OR"]},"conditions":{"type":"array","description":"Array of filter conditions to be combined","items":{"type":"object","required":["filterType","type","filter","filterTo"],"additionalProperties":false,"properties":{"filterType":{"type":"string","description":"Filter type identifier for number filters","enum":["number"]},"type":{"type":"string","description":"Number filter operation type","enum":["equals","notEqual","greaterThan","greaterThanOrEqual","lessThan","lessThanOrEqual","inRange","blank","notBlank"]},"filter":{"type":["number","null"],"description":"Primary filter value"},"filterTo":{"type":["number","null"],"description":"Secondary filter value for range operations"}}},"minItems":2,"maxItems":2}}}}}}},"sort":{"type":["object","null"],"description":"Sort configuration for the grid","required":["sortModel"],"additionalProperties":false,"properties":{"sortModel":{"type":"array","description":"Array of sort configurations","items":{"type":"object","required":["colId","sort","type"],"additionalProperties":false,"properties":{"colId":{"type":"string","description":"Column ID that supports sorting","enum":["make","model","price","country"]},"sort":{"type":"string","description":"Sort direction: ascending or descending","enum":["asc","desc"]},"type":{"type":"string","description":"Sort type: default or absolute values","enum":["default","absolute"]}}}}}},"columnVisibility":{"type":["object","null"],"description":"Column visibility configuration for the grid","required":["hiddenColIds"],"additionalProperties":false,"properties":{"hiddenColIds":{"type":"array","description":"Array of column IDs to hide","items":{"$ref":"#/$defs/allColumnIds"}}}},"columnSizing":{"type":["object","null"],"description":"Column sizing configuration for the grid","required":["columnSizingModel"],"additionalProperties":false,"properties":{"columnSizingModel":{"type":"array","description":"Array of column sizing configurations","items":{"anyOf":[{"type":"object","required":["colId","width"],"additionalProperties":false,"properties":{"colId":{"$ref":"#/$defs/resizableColumnId"},"width":{"type":"number","description":"Fixed width in pixels","minimum":20}}},{"type":"object","required":["colId","flex"],"additionalProperties":false,"properties":{"colId":{"$ref":"#/$defs/resizableColumnId"},"flex":{"type":"number","description":"Flex sizing ratio","minimum":0}}}]}}}}},"$defs":{"allColumnIds":{"type":"string","description":"make\nmodel\nprice\ncountry\nactions","enum":["make","model","price","country","actions"]},"resizableColumnId":{"type":"string","description":"Column ID that supports resizing","enum":["make","model","price","country"]}}}}'
+POST http://localhost:8081/api/ai/grid-query
+Content-Type: application/json
+
+{
+  "userQuery": "remove price column",
+  "gridState": {
+    "version": "35.2.1",
+    "sideBar": {
+      "visible": false,
+      "openToolPanel": null,
+      "toolPanels": {}
+    },
+    "columnSizing": {
+      "columnSizingModel": [
+        {
+          "colId": "make",
+          "width": 200
+        },
+        {
+          "colId": "model",
+          "width": 200
+        },
+        {
+          "colId": "price",
+          "width": 200
+        },
+        {
+          "colId": "country",
+          "width": 200
+        },
+        {
+          "colId": "actions",
+          "width": 140
+        }
+      ]
+    },
+    "columnOrder": {
+      "orderedColIds": [
+        "make",
+        "model",
+        "price",
+        "country",
+        "actions"
+      ]
+    },
+    "filter": {
+      "selectableFilters": {}
+    },
+    "rowGroupExpansion": {
+      "expandedRowGroupIds": [],
+      "collapsedRowGroupIds": []
+    },
+    "pagination": {
+      "page": 0,
+      "pageSize": 100
+    }
+  },
+  "structuredSchema": {
+    "type": "object",
+    "required": [
+      "filter",
+      "sort",
+      "columnVisibility",
+      "columnSizing"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "filter": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "filterModel"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "filterModel": {
+            "type": "object",
+            "required": [
+              "price"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "price": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "required": [
+                  "filterType",
+                  "operator",
+                  "conditions"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "filterType": {
+                    "type": "string",
+                    "description": "Filter type identifier for number filters with multiple conditions",
+                    "enum": [
+                      "number"
+                    ]
+                  },
+                  "operator": {
+                    "type": "string",
+                    "description": "Logical operator to combine multiple filter conditions. Must be included even with a single filter to adhere to the API.",
+                    "enum": [
+                      "AND",
+                      "OR"
+                    ]
+                  },
+                  "conditions": {
+                    "type": "array",
+                    "description": "Array of filter conditions to be combined",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "filterType",
+                        "type",
+                        "filter",
+                        "filterTo"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "filterType": {
+                          "type": "string",
+                          "description": "Filter type identifier for number filters",
+                          "enum": [
+                            "number"
+                          ]
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "Number filter operation type",
+                          "enum": [
+                            "equals",
+                            "notEqual",
+                            "greaterThan",
+                            "greaterThanOrEqual",
+                            "lessThan",
+                            "lessThanOrEqual",
+                            "inRange",
+                            "blank",
+                            "notBlank"
+                          ]
+                        },
+                        "filter": {
+                          "type": [
+                            "number",
+                            "null"
+                          ],
+                          "description": "Primary filter value"
+                        },
+                        "filterTo": {
+                          "type": [
+                            "number",
+                            "null"
+                          ],
+                          "description": "Secondary filter value for range operations"
+                        }
+                      }
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "sort": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "Sort configuration for the grid",
+        "required": [
+          "sortModel"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "sortModel": {
+            "type": "array",
+            "description": "Array of sort configurations",
+            "items": {
+              "type": "object",
+              "required": [
+                "colId",
+                "sort",
+                "type"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "colId": {
+                  "type": "string",
+                  "description": "Column ID that supports sorting",
+                  "enum": [
+                    "make",
+                    "model",
+                    "price",
+                    "country"
+                  ]
+                },
+                "sort": {
+                  "type": "string",
+                  "description": "Sort direction: ascending or descending",
+                  "enum": [
+                    "asc",
+                    "desc"
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Sort type: default or absolute values",
+                  "enum": [
+                    "default",
+                    "absolute"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "columnVisibility": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "Column visibility configuration for the grid",
+        "required": [
+          "hiddenColIds"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "hiddenColIds": {
+            "type": "array",
+            "description": "Array of column IDs to hide",
+            "items": {
+              "$ref": "#/$defs/allColumnIds"
+            }
+          }
+        }
+      },
+      "columnSizing": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "description": "Column sizing configuration for the grid",
+        "required": [
+          "columnSizingModel"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "columnSizingModel": {
+            "type": "array",
+            "description": "Array of column sizing configurations",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "colId",
+                    "width"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "colId": {
+                      "$ref": "#/$defs/resizableColumnId"
+                    },
+                    "width": {
+                      "type": "number",
+                      "description": "Fixed width in pixels",
+                      "minimum": 20
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "colId",
+                    "flex"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "colId": {
+                      "$ref": "#/$defs/resizableColumnId"
+                    },
+                    "flex": {
+                      "type": "number",
+                      "description": "Flex sizing ratio",
+                      "minimum": 0
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "$defs": {
+      "allColumnIds": {
+        "type": "string",
+        "description": "make\nmodel\nprice\ncountry\nactions",
+        "enum": [
+          "make",
+          "model",
+          "price",
+          "country",
+          "actions"
+        ]
+      },
+      "resizableColumnId": {
+        "type": "string",
+        "description": "Column ID that supports resizing",
+        "enum": [
+          "make",
+          "model",
+          "price",
+          "country"
+        ]
+      }
+    }
+  }
+}
+
+###
