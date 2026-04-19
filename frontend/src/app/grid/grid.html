@@ -13,7 +13,7 @@
   <div style="flex: 1;">
     <ag-grid-angular
       style="width: 100%; height: 100%; border: 1px solid red;"
-      [rowData]="rowData"
+      [gridOptions]="gridOptions"
       [columnDefs]="columnDefs"
       [theme]="theme"
       (gridReady)="onGridReady($event)">

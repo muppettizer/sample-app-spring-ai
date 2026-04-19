@@ -1,34 +1,93 @@
-# Mistral 7B Instruct (good at structured JSON)
-
 services:
-  model-init:
-    image: curlimages/curl:latest
+
+#  solr:
+#    image: solr:9.6
+#    ports:
+#      - "8983:8983"
+#    environment:
+#      - SOLR_MODE=solrcloud
+#      - SOLR_OPTS=-Dsolr.cors.enable=true -Dsolr.cors.allowed-origins=*
+#    volumes:
+#      - solr_data:/var/solr
+#    restart: unless-stopped
+
+  solr:
+    image: solr:9.8.1
+    container_name: solr
+    ports:
+      - "8983:8983"
+    environment:
+      - SOLR_JAVA_MEM=-Xms512m -Xmx1g
     volumes:
-      - ./models:/models
+      - solr_data:/var/solr
+      - ./web.xml:/opt/solr/server/solr-webapp/webapp/WEB-INF/web.xml
+    command: >
+      bash -c "
+        solr start -cloud -f
+        -Dsolr.jetty.request.header.size=65536
+        -Dsolr.jetty.filter.allowOrigins=*
+        -Dsolr.jetty.filter.allowedMethods=GET,POST,OPTIONS,HEAD
+      "
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8983/solr/admin/collections?action=CLUSTERSTATUS" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  cors-checker:
+    image: curlimages/curl:latest
+    container_name: cors-checker
+    depends_on:
+      solr:
+        condition: service_healthy
+    restart: "no"
+    command: >
+      sh -c "
+        echo '=== Testing CORS Configuration ===' &&
+        echo &&
+        echo '1. Testing CORS preflight OPTIONS request:' &&
+        curl -i -X OPTIONS -H 'Origin: http://localhost:4200' -H 'Access-Control-Request-Method: GET' -H 'Access-Control-Request-Headers: Content-Type' 'http://solr:8983/solr/mycollection/select?q=type%3ALOANS' &&
+        echo &&
+        echo '2. Testing CORS GET request (similar to your Angular app):' &&
+        curl -i -X GET -H 'Origin: http://localhost:4200' 'http://solr:8983/solr/mycollection/select?q=type%3ALOANS&start=0&rows=100&wt=json' &&
+        echo &&
+        echo '3. Testing basic admin endpoint:' &&
+        curl -i -X GET -H 'Origin: http://localhost:4200' 'http://solr:8983/solr/admin/collections?action=LIST' &&
+        echo &&
+        echo '=== CORS Testing Complete ==='
+      "
+
+  solr-init:
+    image: curlimages/curl:latest
+    depends_on:
+      - solr
+    volumes:
+      - ./data:/data
     entrypoint:
       - sh
       - -c
       - |
-        mkdir -p /models
-        if [ ! -f /models/mistral.gguf ]; then
-          echo 'Downloading model...'
-          curl -L -o /models/mistral.gguf https://huggingface.co/bartowski/Mistral-7B-Instruct-v0.3-GGUF/resolve/main/Mistral-7B-Instruct-v0.3-Q4_K_M.gguf
-        else
-          echo 'Model already exists'
-        fi
+        echo 'Waiting for Solr...'
+        until curl -s http://solr:8983/solr/admin/info/system > /dev/null; do
+          sleep 5
+        done
+        echo 'Creating collection...'
+        curl -X POST "http://solr:8983/solr/admin/collections?action=CREATE&name=cars&numShards=1&replicationFactor=1&collection.configName=_default"
+        echo 'Updating schema...'
+        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/cars/schema" -d '{
+          "add-field": [
+            {"name": "make", "type": "string", "stored": true, "indexed": true},
+            {"name": "model", "type": "string", "stored": true, "indexed": true},
+            {"name": "price", "type": "pint", "stored": true, "indexed": true},
+            {"name": "country", "type": "string", "stored": true, "indexed": true}
+          ]
+        }'
+        echo 'Seeding data...'
+        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/cars/update?commit=true" -d @/data/cars.json
         echo 'Done'
+        echo 'Testing collection...'
+        curl "http://solr:8983/solr/cars/select?q=*:*&rows=2&wt=json"
 
-  local-ai:
-    image: localai/localai:latest
-    ports:
-      - "8083:8080"
-    volumes:
-      - ./models:/models
-      - ./localai:/root/.local/share/local-ai
-    depends_on:
-      - model-init
-    environment:
-      - DEBUG=true
-      - THREADS=4
-      - CONTEXT_SIZE=4096
-    restart: unless-stopped
+volumes:
+  solr_data:
