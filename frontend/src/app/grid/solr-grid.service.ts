@@ -6,7 +6,7 @@ import {IServerSideGetRowsParams} from 'ag-grid-community';
 @Injectable({providedIn: 'root'})
 export class SolrGridService {
     private http = inject(HttpClient);
-    private solrEndpoint = 'http://localhost:8983/solr/cars';
+    private solrEndpoint = 'http://localhost:8983/solr/security-screener';
 
     private buildSolrQuery(
         params: IServerSideGetRowsParams

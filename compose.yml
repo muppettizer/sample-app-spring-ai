@@ -72,22 +72,19 @@ services:
         until curl -s http://solr:8983/solr/admin/info/system > /dev/null; do
           sleep 5
         done
+        echo 'Resetting collection if it exists...'
+        curl -s -X POST "http://solr:8983/solr/admin/collections?action=DELETE&name=security-screener" > /dev/null || true
         echo 'Creating collection...'
-        curl -X POST "http://solr:8983/solr/admin/collections?action=CREATE&name=cars&numShards=1&replicationFactor=1&collection.configName=_default"
+        curl -X POST "http://solr:8983/solr/admin/collections?action=CREATE&name=security-screener&numShards=1&replicationFactor=1&collection.configName=_default"
+        echo 'Disabling auto-create fields...'
+        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/security-screener/config" -d '{"set-user-property": {"update.autoCreateFields":"false"}}'
         echo 'Updating schema...'
-        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/cars/schema" -d '{
-          "add-field": [
-            {"name": "make", "type": "string", "stored": true, "indexed": true},
-            {"name": "model", "type": "string", "stored": true, "indexed": true},
-            {"name": "price", "type": "pint", "stored": true, "indexed": true},
-            {"name": "country", "type": "string", "stored": true, "indexed": true}
-          ]
-        }'
+        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/security-screener/schema" -d @/data/security-screener-schema.json
         echo 'Seeding data...'
-        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/cars/update?commit=true" -d @/data/cars.json
+        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/security-screener/update?commit=true" -d @/data/securities.json
         echo 'Done'
         echo 'Testing collection...'
-        curl "http://solr:8983/solr/cars/select?q=*:*&rows=2&wt=json"
+        curl "http://solr:8983/solr/security-screener/select?q=*:*&rows=2&wt=json"
 
 volumes:
   solr_data:
