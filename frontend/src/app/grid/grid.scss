@@ -1,6 +1,37 @@
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.query-input {
+  width: min(760px, 100%);
+  padding: 8px;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+}
+
+.preset-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  background: #f4f4f5;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.preset-btn:hover {
+  background: #e4e4e7;
+}
+
 .ask-ai-btn {
-  padding: 5px 10px;
-  margin-left: 5px;
+  padding: 8px 12px;
   background-color: #007bff;
   color: white;
   border: none;

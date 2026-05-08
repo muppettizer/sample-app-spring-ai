@@ -1,20 +1,27 @@
 <div style="height: 100%; display: flex; flex-direction: column;">
-  <div style="margin-bottom: 10px;">
-    <input type="text" [(ngModel)]="query" placeholder="Ask AI to filter or sort..." style="width: 300px; padding: 5px;">
+  <div class="toolbar">
+    <input type="text" [(ngModel)]="query" placeholder="e.g. Show high-risk securities and sort by risk score descending" class="query-input">
     <button class="ask-ai-btn" (click)="askAI()" [disabled]="gridAiService.loading()">
       @if (!gridAiService.loading()) {
-        <span>Ask AI</span>
+        <span>Run Security Screening AI</span>
       } @else {
         <span><span class="spinner"></span> Loading...</span>
       }
     </button>
   </div>
 
+  <div class="preset-row">
+    <button class="preset-btn" (click)="runPreset('Show securities with risk score above 70 and sort by risk score descending')">High Risk</button>
+    <button class="preset-btn" (click)="runPreset('Show only sanctions flagged securities')">Sanctions Flagged</button>
+    <button class="preset-btn" (click)="runPreset('Show securities pending review and hide currency column')">Pending Review</button>
+  </div>
+
   <div style="flex: 1;">
     <ag-grid-angular
-      style="width: 100%; height: 100%; border: 1px solid red;"
+      style="width: 100%; height: 100%;"
       [gridOptions]="gridOptions"
       [columnDefs]="columnDefs"
+      [defaultColDef]="defaultColDef"
       [theme]="theme"
       (gridReady)="onGridReady($event)">
     </ag-grid-angular>

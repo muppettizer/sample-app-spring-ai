@@ -1,12 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import {ColDef, GridApi, themeQuartz, IServerSideDatasource} from 'ag-grid-community';
+import { ColDef, GridApi, IServerSideDatasource, SetFilterValuesFuncParams, themeQuartz } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { SolrGridService } from './solr-grid.service';
 import { GridAiService } from './grid-ai.service';
-import {GridActionsCellRendererComponent} from './actions/grid-actions-cell-renderer.component';
-import {PromptsCellRendererComponent} from './actions/prompts-cell-renderer.component';
+import { SolrGridService } from './solr-grid.service';
 
 @Component({
   selector: 'app-grid',
@@ -20,7 +18,6 @@ export class GridComponent implements OnInit {
 
   gridApi!: GridApi;
   query = '';
-  // theme = themeAlpine;
   theme = themeQuartz;
 
   gridOptions: any = {
@@ -28,35 +25,56 @@ export class GridComponent implements OnInit {
   };
 
   columnDefs: ColDef[] = [
-    { field: 'make' },
-    { field: 'model' },
-    { field: 'price', filter: 'agNumberColumnFilter' },
-    { field: 'country' },
+    { field: 'securityId', headerName: 'Security ID', minWidth: 140, filter: 'agTextColumnFilter' },
+    { field: 'securityName', headerName: 'Security Name', minWidth: 210, filter: 'agTextColumnFilter' },
+    { field: 'issuer', headerName: 'Issuer', minWidth: 180, filter: 'agTextColumnFilter' },
     {
-      headerName: 'Prompts',
-      field: 'prompts',
-      sortable: false,
-      filter: false,
-      suppressHeaderMenuButton: true,
-      resizable: false,
-      width: 160,
-      cellRenderer: PromptsCellRendererComponent,
+      field: 'assetClass',
+      headerName: 'Asset Class',
+      minWidth: 140,
+      filter: 'agSetColumnFilter',
+      filterParams: {
+        values: (params: SetFilterValuesFuncParams) => this.loadFacetFilterValues(params, 'assetClass')
+      }
     },
     {
-      headerName: 'Actions',
-      field: 'actions',
-      sortable: false,
-      filter: false,
-      suppressHeaderMenuButton: true,
-      resizable: false,
-      width: 140,
-      // pinned: 'right',           // keeps it always visible when scrolling
-      cellRenderer: GridActionsCellRendererComponent,
-      // cellStyle: { padding: '0 4px' }
-    }
+      field: 'country',
+      headerName: 'Country',
+      minWidth: 120,
+      filter: 'agSetColumnFilter',
+      filterParams: {
+        values: (params: SetFilterValuesFuncParams) => this.loadFacetFilterValues(params, 'country')
+      }
+    },
+    {
+      field: 'currency',
+      headerName: 'CCY',
+      minWidth: 100,
+      maxWidth: 120,
+      filter: 'agSetColumnFilter',
+      filterParams: {
+        values: (params: SetFilterValuesFuncParams) => this.loadFacetFilterValues(params, 'currency')
+      }
+    },
+    { field: 'rating', headerName: 'Rating', minWidth: 110, filter: 'agTextColumnFilter' },
+    { field: 'esgRiskLevel', headerName: 'ESG Risk', minWidth: 120, filter: 'agTextColumnFilter' },
+    { field: 'riskScore', headerName: 'Risk Score', minWidth: 120, filter: 'agNumberColumnFilter' },
+    { field: 'sanctionsFlag', headerName: 'Sanctions', minWidth: 120, filter: 'agTextColumnFilter' },
+    { field: 'screeningStatus', headerName: 'Screening Status', minWidth: 170, filter: 'agTextColumnFilter' },
+    { field: 'lastReviewDate', headerName: 'Last Review', minWidth: 140, filter: 'agDateColumnFilter' }
   ];
 
-  constructor(private toastr: ToastrService, private solrGridService: SolrGridService, protected gridAiService: GridAiService) {}
+  defaultColDef: ColDef = {
+    sortable: true,
+    filter: true,
+    resizable: true
+  };
+
+  constructor(
+    private toastr: ToastrService,
+    protected gridAiService: GridAiService,
+    private solrGridService: SolrGridService
+  ) {}
 
   ngOnInit() {
     console.log('Grid component initialized');
@@ -65,28 +83,7 @@ export class GridComponent implements OnInit {
   onGridReady(params: any) {
     console.log('Grid ready', params);
     this.gridApi = params.api;
-
-    const datasource = this.createServerSideDatasource();
-    this.gridApi.setGridOption("serverSideDatasource", datasource);
-  }
-
-  private createServerSideDatasource(): IServerSideDatasource {
-    return {
-      getRows: (params) => {
-        this.solrGridService.fetchSolrRows(params).subscribe({
-          next: ({rows, lastRow}) => {
-            params.success({
-              rowData: rows,
-              rowCount: lastRow
-            });
-          },
-          error: (error) => {
-            params.fail();
-            this.toastr.error('Failed to load data from Solr', 'Error');
-          }
-        });
-      }
-    };
+    this.gridApi.setGridOption('serverSideDatasource', this.createServerSideDatasource());
   }
 
   getStructuredSchemaSafe() {
@@ -102,7 +99,41 @@ export class GridComponent implements OnInit {
     };
   }
 
+  private createServerSideDatasource(): IServerSideDatasource {
+    return {
+      getRows: (params) => {
+        this.solrGridService.fetchSolrRows(params).subscribe({
+          next: ({rows, lastRow}) => {
+            params.success({
+              rowData: rows,
+              rowCount: lastRow
+            });
+          },
+          error: () => {
+            params.fail();
+            this.toastr.error('Failed to load Solr rows', 'Error');
+          }
+        });
+      }
+    };
+  }
+
+  private loadFacetFilterValues(params: SetFilterValuesFuncParams, field: string): void {
+    this.solrGridService.fetchFacetValues(field).subscribe({
+      next: (values) => params.success(values),
+      error: () => {
+        this.toastr.error(`Failed to load ${field} filter values`, 'Facet error');
+        params.success([]);
+      }
+    });
+  }
+
   askAI() {
+    if (!this.query.trim()) {
+      this.toastr.warning('Type a screening instruction first', 'Prompt required');
+      return;
+    }
+
     this.gridAiService.askAI(this.query, this.gridApi.getState(), this.getStructuredSchemaSafe()).subscribe({
       next: (result) => {
         this.applyResult(result);
@@ -114,29 +145,46 @@ export class GridComponent implements OnInit {
   }
 
   applyResult(result: any) {
-    // This might not be needed anymore, but keeping for compatibility
-    switch (result.action) {
-
-      case 'filter':
-        this.gridApi.setFilterModel({
-          [result.payload.column]: {
-            type: 'equals',
-            filter: result.payload.value
-          }
-        });
-        break;
-
-      case 'sort':
-        this.gridApi.applyColumnState({
-          state: [{
-            colId: result.payload.column,
-            sort: result.payload.direction
-          }]
-        });
-        break;
-
-      default:
-        console.warn('Unknown action', result);
+    if (!result || typeof result !== 'object') {
+      this.toastr.error('AI response is not valid JSON object', 'Invalid response');
+      return;
     }
+
+    if (result.filter && typeof result.filter === 'object') {
+      this.gridApi.setFilterModel(result.filter);
+    }
+
+    if (Array.isArray(result.sort) && result.sort.length > 0) {
+      this.gridApi.applyColumnState({
+        state: result.sort.map((entry: any) => ({
+          colId: entry?.colId,
+          sort: entry?.sort
+        })).filter((entry: any) => !!entry.colId && !!entry.sort),
+        defaultState: { sort: null }
+      });
+    }
+
+    if (result.columnVisibility && typeof result.columnVisibility === 'object') {
+      const visibilityState = Object.entries(result.columnVisibility).map(([colId, visible]) => ({
+        colId,
+        hide: !Boolean(visible)
+      }));
+      this.gridApi.applyColumnState({ state: visibilityState });
+    }
+
+    if (result.columnSizing && typeof result.columnSizing === 'object') {
+      const sizingState = Object.entries(result.columnSizing).map(([colId, width]) => ({
+        colId,
+        width: Number(width)
+      })).filter(entry => Number.isFinite(entry.width));
+      this.gridApi.applyColumnState({ state: sizingState });
+    }
+
+    this.toastr.success('AI screening instructions applied', 'Done');
+  }
+
+  runPreset(preset: string) {
+    this.query = preset;
+    this.askAI();
   }
 }

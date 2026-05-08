@@ -1,8 +1,11 @@
 package com.sample.app.ai.model;
 
 import java.util.Map;
+import java.util.List;
 
 public record GridAiResponse(
-        String action, // "filter" | "sort" | "highlight"
-        Map<String, Object> payload
+        Map<String, Object> filter,
+        List<Map<String, String>> sort,
+        Map<String, Boolean> columnVisibility,
+        Map<String, Integer> columnSizing
 ) {}
