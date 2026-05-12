@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/api/v1/securities/[^/]+/portfolio-holdings"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\"instrumentId\":\"__INSTRUMENT_ID__\",\"asOf\":\"2026-05-08T00:00:00Z\",\"source\":\"WIREMOCK_MOCK_HOLDINGS_API\",\"currency\":\"USD\",\"holdings\":[{\"portfolioId\":\"PF-ALPHA\",\"portfolioName\":\"Alpha Institutional\",\"quantity\":425000,\"marketValueUsd\":51200000.0,\"weightPct\":0.38},{\"portfolioId\":\"PF-BAL\",\"portfolioName\":\"Balanced Core SMA\",\"quantity\":210000,\"marketValueUsd\":24800000.0,\"weightPct\":0.22},{\"portfolioId\":\"PF-LIQ\",\"portfolioName\":\"Short Duration Liquidity\",\"quantity\":95000,\"marketValueUsd\":10150000.0,\"weightPct\":0.11}]}"
+  }
+}

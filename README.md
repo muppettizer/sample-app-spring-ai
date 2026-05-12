@@ -3,18 +3,27 @@
 Spring Boot app with Spring AI
 
 See SETUP.md for instructions on how this project was setup.
+See GRID_FEATURES.md for a feature-by-feature explanation of the security screening grid.
 
 ## Running the App
 
-### 1) Start Solr + Seed Data
+### 1) Containers
 
 ```bash
-# from project root
+# Start Solr + Seed Data
 docker compose up -d solr
 docker compose run --rm solr-init
 ```
-
 Solr runs on: `http://localhost:8983`
+
+```bash
+# Start Redis
+docker compose up -d redis
+
+# Test Redis connection
+docker exec -it redis redis-cli ping
+nc -zv 127.0.0.1 6379
+```
 
 ### 2) Start Spring Boot API
 
@@ -74,6 +83,16 @@ curl -s -X POST "http://localhost:8081/api/ai/grid-query" \
 Expected:
 - JSON response with top-level fields: `filter`, `sort`, `columnVisibility`, `columnSizing`
 
+### Verify Spring Boot + Redis health
+
+```bash
+curl -s "http://localhost:8081/actuator/health"
+```
+
+Expected:
+- `status` is `UP`
+- `components.redis.status` is `UP` when Redis is running
+
 ### Verify Frontend is working
 
 1. Open `http://localhost:4200`
@@ -84,3 +103,24 @@ Expected:
    - `Show only sanctions flagged securities`
    - `Show pending review securities and hide currency column`
 5. Click **Run Security Screening AI** and confirm the grid updates
+
+## Chat Memory Configuration
+
+Screening chat now uses Spring AI `ChatMemory` abstraction.
+
+Default (`application.yml`):
+- `app.screening.chat-memory.type: in-memory`
+
+To switch to Redis-backed chat memory:
+1. Add Spring AI Redis chat-memory repository starter to backend dependencies.
+2. Configure Redis connection properties.
+3. Set:
+
+```yaml
+app:
+  screening:
+    chat-memory:
+      type: redis
+```
+
+Portfolio manager chat history is keyed by `portfolioManagerId` conversation ID.

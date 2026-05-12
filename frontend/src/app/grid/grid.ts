@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, IServerSideDatasource, SetFilterValuesFuncParams, themeQuartz } from 'ag-grid-community';
+import { ColDef, GridApi, IServerSideDatasource, SetFilterValuesFuncParams, themeQuartz, ValueFormatterParams } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { GridAiService } from './grid-ai.service';
 import { SolrGridService } from './solr-grid.service';
+import { CustomButtonCellRendererComponent } from './actions/custom-button-cell-renderer.component';
 
 @Component({
   selector: 'app-grid',
   standalone: true,
-  imports: [AgGridAngular, FormsModule],
+  imports: [AgGridAngular, FormsModule, CustomButtonCellRendererComponent],
   templateUrl: './grid.html',
   styleUrl: './grid.scss',
   host: { 'style': 'height: 100%; display: block;' }
@@ -18,6 +19,10 @@ export class GridComponent implements OnInit {
 
   gridApi!: GridApi;
   query = '';
+  portfolioManagerId = 'pm-001';
+  chatInput = '';
+  chatLoading = false;
+  chatMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
   theme = themeQuartz;
 
   gridOptions: any = {
@@ -59,9 +64,38 @@ export class GridComponent implements OnInit {
     { field: 'rating', headerName: 'Rating', minWidth: 110, filter: 'agTextColumnFilter' },
     { field: 'esgRiskLevel', headerName: 'ESG Risk', minWidth: 120, filter: 'agTextColumnFilter' },
     { field: 'riskScore', headerName: 'Risk Score', minWidth: 120, filter: 'agNumberColumnFilter' },
+    {
+      field: 'marginRate',
+      headerName: 'Margin Rate',
+      minWidth: 130,
+      filter: 'agNumberColumnFilter',
+      valueFormatter: (params: ValueFormatterParams) =>
+        typeof params.value === 'number' ? `${params.value.toFixed(2)}%` : String(params.value ?? '')
+    },
     { field: 'sanctionsFlag', headerName: 'Sanctions', minWidth: 120, filter: 'agTextColumnFilter' },
     { field: 'screeningStatus', headerName: 'Screening Status', minWidth: 170, filter: 'agTextColumnFilter' },
-    { field: 'lastReviewDate', headerName: 'Last Review', minWidth: 140, filter: 'agDateColumnFilter' }
+    { field: 'lastReviewDate', headerName: 'Last Review', minWidth: 140, filter: 'agDateColumnFilter' },
+    {
+      colId: 'holdingsActions',
+      headerName: 'Actions',
+      pinned: 'right',
+      width: 150,
+      sortable: false,
+      filter: false,
+      suppressHeaderMenuButton: true,
+      cellRenderer: CustomButtonCellRendererComponent
+    },
+    {
+      colId: 'aiBetterMargin',
+      headerName: 'AI',
+      minWidth: 220,
+      sortable: false,
+      filter: false,
+      suppressHeaderMenuButton: true,
+      valueGetter: () => 'Find Similar (Better Margin)',
+      cellRenderer: () => '<button class="ai-row-btn">Find Similar (Better Margin)</button>',
+      onCellClicked: (params) => this.findSimilarBetterMargin(params?.data)
+    }
   ];
 
   defaultColDef: ColDef = {
@@ -78,6 +112,7 @@ export class GridComponent implements OnInit {
 
   ngOnInit() {
     console.log('Grid component initialized');
+    this.loadChatHistory();
   }
 
   onGridReady(params: any) {
@@ -186,5 +221,68 @@ export class GridComponent implements OnInit {
   runPreset(preset: string) {
     this.query = preset;
     this.askAI();
+  }
+
+  sendScreeningChat(): void {
+    const message = this.chatInput.trim();
+    if (!message || this.chatLoading) {
+      return;
+    }
+
+    this.chatLoading = true;
+    this.gridAiService.screeningChat(
+      this.portfolioManagerId,
+      message,
+      this.gridApi?.getState?.() ?? {},
+      this.getStructuredSchemaSafe()
+    ).subscribe({
+      next: (response) => {
+        this.chatMessages = response?.history ?? [];
+        this.chatInput = '';
+      },
+      error: () => this.toastr.error('Failed to send screening chat message', 'Chat error'),
+      complete: () => { this.chatLoading = false; }
+    });
+  }
+
+  clearChatHistory(): void {
+    this.gridAiService.clearScreeningChatHistory(this.portfolioManagerId).subscribe({
+      next: () => { this.chatMessages = []; },
+      error: () => this.toastr.error('Failed to clear chat history', 'Chat error')
+    });
+  }
+
+  private loadChatHistory(): void {
+    this.gridAiService.getScreeningChatHistory(this.portfolioManagerId).subscribe({
+      next: (response) => {
+        this.chatMessages = response?.history ?? [];
+      },
+      error: () => {
+        this.chatMessages = [];
+      }
+    });
+  }
+
+  private findSimilarBetterMargin(rowData: any): void {
+    if (!rowData) {
+      this.toastr.warning('No row selected for AI action', 'No data');
+      return;
+    }
+
+    const currentMargin = Number(rowData.marginRate);
+    const marginTarget = Number.isFinite(currentMargin) ? Math.max(0, currentMargin - 0.15) : null;
+
+    const query = `Find securities similar to this one but with a better (lower) margin rate.
+Current security: ${JSON.stringify(rowData)}.
+Requirements:
+- Keep assetClass, country, currency, rating, and issuer profile as similar as possible
+- Margin rate must be lower than current${marginTarget !== null ? ` and ideally <= ${marginTarget.toFixed(2)}` : ''}
+- Prefer lower riskScore if possible
+- Return AG Grid state JSON only.`;
+
+    this.gridAiService.askAI(query, this.gridApi.getState(), this.getStructuredSchemaSafe()).subscribe({
+      next: (result) => this.applyResult(result),
+      error: () => this.toastr.error('Failed to run AI better margin action', 'Error')
+    });
   }
 }

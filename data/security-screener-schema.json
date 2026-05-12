@@ -9,6 +9,7 @@
     {"name": "rating", "type": "string", "stored": true, "indexed": true, "docValues": true},
     {"name": "esgRiskLevel", "type": "string", "stored": true, "indexed": true, "docValues": true},
     {"name": "riskScore", "type": "pint", "stored": true, "indexed": true},
+    {"name": "marginRate", "type": "pfloat", "stored": true, "indexed": true},
     {"name": "sanctionsFlag", "type": "string", "stored": true, "indexed": true, "docValues": true},
     {"name": "screeningStatus", "type": "string", "stored": true, "indexed": true, "docValues": true},
     {"name": "lastReviewDate", "type": "string", "stored": true, "indexed": true}
