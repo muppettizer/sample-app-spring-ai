@@ -1,0 +1,6 @@
+services:
+  copilot-template:
+    build:
+      context: .
+      dockerfile: Dockerfile.sbx
+    image: my-org/copilot-zscaler:v1

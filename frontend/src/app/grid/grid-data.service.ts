@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class GridDataService {
-  private solrUrl = 'http://localhost:8983/solr/cars/select';
+  private solrUrl = 'http://localhost:8983/solr/security-screener/select';
 
   constructor(private http: HttpClient) {}
 

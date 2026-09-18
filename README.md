@@ -2,122 +2,125 @@
 
 Spring Boot app with Spring AI
 
-# Setup
+See SETUP.md for instructions on how this project was setup.
+See GRID_FEATURES.md for a feature-by-feature explanation of the security screening grid.
+
+## Running the App
+
+### 1) Containers
 
 ```bash
-# Install or Update SDKMan if not already installed
-curl -s "https://get.sdkman.io" | bash
-source "$HOME/.sdkman/bin/sdkman-init.sh"
+# Start Solr + Seed Data
+docker compose up -d solr
+docker compose run --rm solr-init
+```
+Solr runs on: `http://localhost:8983`
 
-# Or Update SDKMan if already installed
-sdk selfupdate
-sdk version
+```bash
+# Start Redis
+docker compose up -d redis
 
-# SDKMan list available versions
-sdk list java
-sdk list maven
-sdk list springboot
-
-# Check current versions
-sdk current
-
-# Install required versions
-sdk install java 21.0.8-amzn
-sdk install maven 3.9.11
-sdk install springboot 3.5.13
-
-# Set default versions
-sdk default java 21.0.8-amzn
-sdk default maven 3.9.9
-sdk default springboot 3.5.13
-
-# Verify installations
-java -version
-mvn -version
-spring --version
-
-# Or create .sdkmanrc file in project root with:
-# Also SDKMan can auto switch using sdkman_auto_env: true in ~/.sdkman/etc/config
-echo "java=21.0.8-amzn" >> .sdkmanrc
-echo "maven=3.9.11" >> .sdkmanrc
-echo "springboot=3.5.13" >> .sdkmanrc
-sdk env
-
+# Test Redis connection
+docker exec -it redis redis-cli ping
+nc -zv 127.0.0.1 6379
 ```
 
-# Spring Initializr
-
-https://start.spring.io/
+### 2) Start Spring Boot API
 
 ```bash
-# List available options
-spring help init --list
-spring init --list
-
-# List dependencies
-#- spring-ai-anthropic
-#- spring-ai-azure-openai
-#- spring-ai-bedrock
-#- spring-ai-bedrock-converse
-#- spring-ai-google-genai
-#- spring-ai-google-genai-embedding
-
-# Create a new Spring Boot project
-export APP_NAME="sample-app-spring-ai"
-spring init \
-  --dependencies=web,actuator,devtools,lombok,docker-compose,testcontainers,validation,spring-ai-google-genai \
-  --build=maven \
-  --java-version=21 \
-  --boot-version=3.5.13 \
-  --groupId=com.sample.app \
-  --artifactId=${APP_NAME} \
-  --name=${APP_NAME} \
-  --force \
-  ./
-
-# sdk env to switch versions if needed
-sdk env --install
-
-# Open in IDE
-idea .
-
-# Install project dependencies
-mvn clean install
-
-# Run the application
+# from project root
 mvn spring-boot:run
-
-# Run tests
-mvn test
-
-# Build the application
-mvn clean package
-
-# Run with Docker Compose
-docker-compose up --build
-
-# Stop Docker Compose
-docker-compose down
-
 ```
 
+Spring Boot runs on: `http://localhost:8081`
 
-# Frontend
+### 3) Start Angular Frontend
 
-```sh
-npm install -g @angular/cli
-ng version
-
-# Create a new Angular project
-ng new frontend
+```bash
+# from project root
 cd frontend
-
-# Run it once
-ng serve
-
-# Dependencies
-npm install ag-grid-community@34 ag-grid-enterprise@34 ag-grid-angular
-
-# Compoennt
-ng generate component grid
+npm install
+npm start
 ```
+
+Frontend runs on: `http://localhost:4200`
+
+## Testing / Verification
+
+### Verify Solr is working
+
+```bash
+# Check seeded record count
+curl -s "http://localhost:8983/solr/security-screener/select?q=*:*&rows=0&wt=json"
+
+# Check facet values used by AG Grid set filters
+curl -s "http://localhost:8983/solr/security-screener/select?q=*:*&rows=0&facet=true&facet.field=assetClass&facet.field=country&facet.field=currency&facet.mincount=1&wt=json"
+```
+
+Expected:
+- `numFound` is greater than `0` (seed currently loads ~400 records)
+- `facet_fields.assetClass`, `facet_fields.country`, and `facet_fields.currency` contain values
+
+### Verify Spring Boot API is working
+
+```bash
+curl -s -X POST "http://localhost:8081/api/ai/grid-query" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userQuery": "Show high risk securities and sort by risk score descending",
+    "gridState": {},
+    "structuredSchema": {
+      "columns": [
+        {"name":"assetClass","type":"string"},
+        {"name":"country","type":"string"},
+        {"name":"currency","type":"string"},
+        {"name":"riskScore","type":"number"}
+      ]
+    }
+  }'
+```
+
+Expected:
+- JSON response with top-level fields: `filter`, `sort`, `columnVisibility`, `columnSizing`
+
+### Verify Spring Boot + Redis health
+
+```bash
+curl -s "http://localhost:8081/actuator/health"
+```
+
+Expected:
+- `status` is `UP`
+- `components.redis.status` is `UP` when Redis is running
+
+### Verify Frontend is working
+
+1. Open `http://localhost:4200`
+2. Confirm rows are visible in AG Grid
+3. Open filters for `Asset Class`, `Country`, and `CCY` and confirm filter options are populated
+4. In a grid prompt box, try:
+   - `Show securities with risk score above 70 and sort by risk score descending`
+   - `Show only sanctions flagged securities`
+   - `Show pending review securities and hide currency column`
+5. Click **Run Security Screening AI** and confirm the grid updates
+
+## Chat Memory Configuration
+
+Screening chat now uses Spring AI `ChatMemory` abstraction.
+
+Default (`application.yml`):
+- `app.screening.chat-memory.type: in-memory`
+
+To switch to Redis-backed chat memory:
+1. Add Spring AI Redis chat-memory repository starter to backend dependencies.
+2. Configure Redis connection properties.
+3. Set:
+
+```yaml
+app:
+  screening:
+    chat-memory:
+      type: redis
+```
+
+Portfolio manager chat history is keyed by `portfolioManagerId` conversation ID.

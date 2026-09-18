@@ -6,7 +6,7 @@ import {IServerSideGetRowsParams} from 'ag-grid-community';
 @Injectable({providedIn: 'root'})
 export class SolrGridService {
     private http = inject(HttpClient);
-    private solrEndpoint = 'http://localhost:8983/solr/cars';
+    private solrEndpoint = 'http://localhost:8983/solr/security-screener';
 
     private buildSolrQuery(
         params: IServerSideGetRowsParams
@@ -44,7 +44,9 @@ export class SolrGridService {
         const fqs: string[] = [];
         for (const colId in filterModel) {
             const filter = filterModel[colId];
-            if (filter.filterType === 'text') {
+            if (filter.filterType === 'set') {
+                fqs.push(this.mapSetFilter(colId, filter));
+            } else if (filter.filterType === 'text') {
                 fqs.push(this.mapTextFilter(colId, filter));
             } else if (filter.filterType === 'number') {
                 fqs.push(this.mapNumberFilter(colId, filter));
@@ -71,6 +73,18 @@ export class SolrGridService {
             case 'inRange': return `${colId}:[${filter.filter} TO ${filter.filterTo}]`;
             default: return `${colId}:${filter.filter}`;
         }
+    }
+
+    private mapSetFilter(colId: string, filter: any): string {
+        const values = Array.isArray(filter?.values) ? filter.values : [];
+        if (!values.length) {
+            return '*:*';
+        }
+
+        const orValues = values
+            .map((value: unknown) => `"${String(value).replace(/"/g, '\\"')}"`)
+            .join(' OR ');
+        return `${colId}:(${orValues})`;
     }
 
     private logParams(params: IServerSideGetRowsParams): void {
@@ -104,6 +118,42 @@ export class SolrGridService {
             }),
             catchError(error => {
                 console.error(`[SolrGridService] HTTP error`, error);
+                return throwError(() => error);
+            })
+        );
+    }
+
+    fetchFacetValues(field: string): Observable<string[]> {
+        const solrParams = new URLSearchParams({
+            q: '*:*',
+            rows: '0',
+            wt: 'json',
+            facet: 'true',
+            'facet.limit': '-1',
+            'facet.sort': 'index',
+            'facet.mincount': '1',
+            'facet.field': field
+        });
+
+        const url = `${this.solrEndpoint}/select?${solrParams.toString()}`;
+        return this.http.get(url).pipe(
+            map((res: any) => {
+                const rawValues = res?.facet_counts?.facet_fields?.[field];
+                if (!Array.isArray(rawValues)) {
+                    return [];
+                }
+
+                const values: string[] = [];
+                for (let i = 0; i < rawValues.length; i += 2) {
+                    const value = rawValues[i];
+                    if (typeof value === 'string' && value.trim().length > 0) {
+                        values.push(value);
+                    }
+                }
+                return values;
+            }),
+            catchError(error => {
+                console.error(`[SolrGridService] Facet query error for ${field}`, error);
                 return throwError(() => error);
             })
         );

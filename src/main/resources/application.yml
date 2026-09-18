@@ -5,9 +5,49 @@ spring:
   profiles:
     default: google
 
+  # DevTools Restart configuration: exclude heavy/static/non-classpath paths from restart
+  devtools:
+    restart:
+      enabled: true
+      exclude:
+        - "static/**"
+        - "public/**"
+        - "**/node_modules/**"
+        - "frontend/**"
+        - "wiremock/**"
+        - ".git/**"
+
   ai:
     model:
       chat: none
+  data:
+    redis:
+      url: redis://127.0.0.1:6379
+#      host: localhost
+#      port: 6379
 
 server:
   port: 8081
+
+# WireMock mocks the external Security Holdings API (see compose.yml → wiremock service).
+app:
+  holdings-api:
+    base-url: http://localhost:18089
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+  health:
+    redis:
+      enabled: true
+
+#app:
+#  screening:
+#    chat-memory:
+#      # in-memory | redis
+#      type: in-memory

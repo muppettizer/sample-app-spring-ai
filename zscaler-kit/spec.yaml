@@ -1,0 +1,13 @@
+schemaVersion: "1"
+kind: mixin
+name: zscaler-ca
+displayName: ZScaler CA Certificate
+description: Installs company ZScaler CA cert into the sandbox trust store
+
+commands:
+  install:
+    - command: |
+        cp /home/agent/zscaler-ca.crt /usr/local/share/ca-certificates/zscaler-ca.crt &&
+        update-ca-certificates
+      user: "0"
+      description: Install ZScaler CA cert into system trust store

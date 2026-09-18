@@ -1,0 +1,17 @@
+{
+  "replace-field": [
+    {"name": "securityId", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "securityName", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "issuer", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "assetClass", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "country", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "currency", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "rating", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "esgRiskLevel", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "riskScore", "type": "pint", "stored": true, "indexed": true},
+    {"name": "marginRate", "type": "pfloat", "stored": true, "indexed": true},
+    {"name": "sanctionsFlag", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "screeningStatus", "type": "string", "stored": true, "indexed": true, "docValues": true},
+    {"name": "lastReviewDate", "type": "string", "stored": true, "indexed": true}
+  ]
+}
