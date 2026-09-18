@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import type { ScreeningChatResponse, GridAiResponse } from './grid-ai.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,7 @@ export class GridAiService {
 
   constructor(private http: HttpClient) {}
 
-  public askAI(userQuery: string, gridState: any, structuredSchema: any): Observable<any> {
+  public askAI(userQuery: string, gridState: any, structuredSchema: any): Observable<GridAiResponse> {
     this.loading.set(true);
     return this.http.post(`${this.apiBase}/grid-query`, {
       userQuery,
@@ -23,17 +24,24 @@ export class GridAiService {
     );
   }
 
-  public screeningChat(portfolioManagerId: string, message: string, gridState: any, structuredSchema: any): Observable<any> {
-    return this.http.post(`${this.apiBase}/screening-chat`, {
+  public screeningChat(
+    portfolioManagerId: string,
+    message: string,
+    gridState: any,
+    structuredSchema: any,
+    selectedRows: Record<string, unknown>[]
+  ): Observable<ScreeningChatResponse> {
+    return this.http.post<ScreeningChatResponse>(`${this.apiBase}/screening-chat`, {
       portfolioManagerId,
       message,
       gridState,
-      structuredSchema
+      structuredSchema,
+      selectedRows
     });
   }
 
-  public getScreeningChatHistory(portfolioManagerId: string): Observable<any> {
-    return this.http.get(`${this.apiBase}/screening-chat/${encodeURIComponent(portfolioManagerId)}/history`);
+  public getScreeningChatHistory(portfolioManagerId: string): Observable<ScreeningChatResponse> {
+    return this.http.get<ScreeningChatResponse>(`${this.apiBase}/screening-chat/${encodeURIComponent(portfolioManagerId)}/history`);
   }
 
   public clearScreeningChatHistory(portfolioManagerId: string): Observable<void> {

@@ -5,6 +5,18 @@ spring:
   profiles:
     default: google
 
+  # DevTools Restart configuration: exclude heavy/static/non-classpath paths from restart
+  devtools:
+    restart:
+      enabled: true
+      exclude:
+        - "static/**"
+        - "public/**"
+        - "**/node_modules/**"
+        - "frontend/**"
+        - "wiremock/**"
+        - ".git/**"
+
   ai:
     model:
       chat: none

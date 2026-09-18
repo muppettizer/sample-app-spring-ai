@@ -1,0 +1,8 @@
+FROM docker/sandbox-templates:copilot
+USER root
+
+# Copy and install ZScaler CA cert
+COPY zscaler-kit/files/home/zscaler-ca.crt /usr/local/share/ca-certificates/zscaler-ca.crt
+RUN update-ca-certificates
+
+USER agent

@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, IServerSideDatasource, SetFilterValuesFuncParams, themeQuartz, ValueFormatterParams } from 'ag-grid-community';
+import { ColDef, GridApi, IServerSideDatasource, RowSelectionOptions, SetFilterValuesFuncParams, themeQuartz, ValueFormatterParams } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { GridAiService } from './grid-ai.service';
 import { SolrGridService } from './solr-grid.service';
 import { CustomButtonCellRendererComponent } from './actions/custom-button-cell-renderer.component';
+import type { ChatMessageDto, ScreeningChatResponse } from './grid-ai.model';
 
 @Component({
   selector: 'app-grid',
@@ -22,8 +23,11 @@ export class GridComponent implements OnInit {
   portfolioManagerId = 'pm-001';
   chatInput = '';
   chatLoading = false;
-  chatMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+  chatMessages: ChatMessageDto[] = [];
   theme = themeQuartz;
+  rowSelection: RowSelectionOptions = {
+    mode: 'multiRow'
+  };
 
   gridOptions: any = {
     rowModelType: 'serverSide'
@@ -224,26 +228,42 @@ export class GridComponent implements OnInit {
   }
 
   sendScreeningChat(): void {
-    const message = this.chatInput.trim();
-    if (!message || this.chatLoading) {
-      return;
-    }
+     const message = this.chatInput.trim();
+     if (!message || this.chatLoading) {
+       return;
+     }
 
-    this.chatLoading = true;
-    this.gridAiService.screeningChat(
-      this.portfolioManagerId,
-      message,
-      this.gridApi?.getState?.() ?? {},
-      this.getStructuredSchemaSafe()
-    ).subscribe({
-      next: (response) => {
-        this.chatMessages = response?.history ?? [];
-        this.chatInput = '';
-      },
-      error: () => this.toastr.error('Failed to send screening chat message', 'Chat error'),
-      complete: () => { this.chatLoading = false; }
-    });
-  }
+     this.chatLoading = true;
+      this.gridAiService.screeningChat(
+       this.portfolioManagerId,
+       message,
+       this.gridApi?.getState?.() ?? {},
+       this.getStructuredSchemaSafe(),
+       this.gridApi?.getSelectedRows?.() ?? []
+      ).subscribe({
+        next: (response: ScreeningChatResponse) => {
+         console.log('Screening chat response:', response);
+         console.log('gridUpdate:', response?.gridUpdate);
+
+          this.chatMessages = response?.history ?? [];
+         this.chatInput = '';
+
+         // Apply GridAiResponse to update grid if available
+         if (response?.gridUpdate) {
+           console.log('Applying grid update:', response.gridUpdate);
+           this.applyResult(response.gridUpdate);
+           this.toastr.success('Grid updated based on AI screening', 'Grid Updated');
+         } else {
+           console.warn('No gridUpdate in response');
+         }
+       },
+       error: (err) => {
+         console.error('Chat error:', err);
+         this.toastr.error('Failed to send screening chat message', 'Chat error');
+       },
+       complete: () => { this.chatLoading = false; }
+     });
+   }
 
   clearChatHistory(): void {
     this.gridAiService.clearScreeningChatHistory(this.portfolioManagerId).subscribe({

@@ -18,4 +18,5 @@ spring:
         api-key: ${GOOGLE_API_KEY}
         chat:
           options:
-            model: gemini-2.0-flash-lite
+            model: gemini-2.5-flash
+#            model: gemini-2.0-flash-lite
