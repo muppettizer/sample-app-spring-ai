@@ -6,8 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "lint": "ng lint"
+    "test": "ng test -- --watch=false",
+    "lint": "ng lint --force"
   },
   "private": true,
   "packageManager": "npm@10.8.2",

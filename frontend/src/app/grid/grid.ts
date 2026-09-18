@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { AgGridAngular } from 'ag-grid-angular';
 import { ColDef, GridApi, IServerSideDatasource, RowSelectionOptions, SetFilterValuesFuncParams, themeQuartz, ValueFormatterParams } from 'ag-grid-community';
 import { FormsModule } from '@angular/forms';
@@ -11,7 +12,7 @@ import type { ChatMessageDto, ScreeningChatResponse } from './grid-ai.model';
 @Component({
   selector: 'app-grid',
   standalone: true,
-  imports: [AgGridAngular, FormsModule, CustomButtonCellRendererComponent],
+  imports: [CommonModule, AgGridAngular, FormsModule, CustomButtonCellRendererComponent],
   templateUrl: './grid.html',
   styleUrl: './grid.scss',
   host: { 'style': 'height: 100%; display: block;' }
