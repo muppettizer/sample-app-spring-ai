@@ -2,7 +2,6 @@ package com.sample.app.ai.service;
 
 import com.sample.app.ai.model.ScreeningChatRequest;
 import com.sample.app.ai.model.ScreeningChatResponse;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @ActiveProfiles("google")
 @EnabledIfEnvironmentVariable(named = "GOOGLE_API_KEY", matches = ".+")
-public class ScreeningChatServiceIntegrationTest {
+class ScreeningChatServiceIntegrationTest {
 
     @Autowired
     ScreeningChatService screeningChatService;
