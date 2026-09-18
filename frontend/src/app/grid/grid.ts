@@ -7,7 +7,7 @@ import { ToastrService } from 'ngx-toastr';
 import { GridAiService } from './grid-ai.service';
 import { SolrGridService } from './solr-grid.service';
 import { CustomButtonCellRendererComponent } from './actions/custom-button-cell-renderer.component';
-import type { ChatMessageDto, ScreeningChatResponse } from './grid-ai.model';
+import type { ScreeningChatMessage, ScreeningChatResponse } from './grid-ai.model';
 
 @Component({
   selector: 'app-grid',
@@ -24,7 +24,7 @@ export class GridComponent implements OnInit {
   portfolioManagerId = 'pm-001';
   chatInput = '';
   chatLoading = false;
-  chatMessages: ChatMessageDto[] = [];
+  chatMessages: ScreeningChatMessage[] = [];
   theme = themeQuartz;
   rowSelection: RowSelectionOptions = {
     mode: 'multiRow'
@@ -244,9 +244,10 @@ export class GridComponent implements OnInit {
       ).subscribe({
         next: (response: ScreeningChatResponse) => {
          console.log('Screening chat response:', response);
+         console.log('assistantMessage:', response?.assistantMessage);
          console.log('gridUpdate:', response?.gridUpdate);
 
-          this.chatMessages = response?.history ?? [];
+         this.chatMessages = response?.history ?? [];
          this.chatInput = '';
 
          // Apply GridAiResponse to update grid if available
@@ -269,14 +270,14 @@ export class GridComponent implements OnInit {
   clearChatHistory(): void {
     this.gridAiService.clearScreeningChatHistory(this.portfolioManagerId).subscribe({
       next: () => { this.chatMessages = []; },
-      error: () => this.toastr.error('Failed to clear chat history', 'Chat error')
+      error: () => this.toastr.error('Failed to clear chat messages', 'Chat error')
     });
   }
 
   private loadChatHistory(): void {
     this.gridAiService.getScreeningChatHistory(this.portfolioManagerId).subscribe({
       next: (response) => {
-        this.chatMessages = response?.history ?? [];
+        this.chatMessages = response?.messages ?? [];
       },
       error: () => {
         this.chatMessages = [];

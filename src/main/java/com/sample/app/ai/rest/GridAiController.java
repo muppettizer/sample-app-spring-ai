@@ -1,13 +1,11 @@
 package com.sample.app.ai.rest;
 
-import com.sample.app.ai.model.GridAiRequest;
-import com.sample.app.ai.model.GridAiResponse;
 import com.sample.app.ai.model.ScreeningChatHistoryResponse;
 import com.sample.app.ai.model.ScreeningChatRequest;
 import com.sample.app.ai.model.ScreeningChatResponse;
 import com.sample.app.ai.model.PortfolioHoldingsAssistantRequest;
 import com.sample.app.ai.model.PortfolioHoldingsAssistantResponse;
-import com.sample.app.ai.service.GridAiService;
+import com.sample.app.ai.service.ScreeningChatHistoryService;
 import com.sample.app.ai.service.ScreeningChatService;
 import com.sample.app.holdings.PortfolioHoldingsAssistantService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,24 +17,18 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/ai")
 public class GridAiController {
 
-    private final GridAiService service;
     private final ScreeningChatService screeningChatService;
+    private final ScreeningChatHistoryService screeningChatHistoryService;
     private final PortfolioHoldingsAssistantService portfolioHoldingsAssistantService;
 
     public GridAiController(
-            GridAiService service,
             ScreeningChatService screeningChatService,
+            ScreeningChatHistoryService screeningChatHistoryService,
             PortfolioHoldingsAssistantService portfolioHoldingsAssistantService
     ) {
-        this.service = service;
         this.screeningChatService = screeningChatService;
+        this.screeningChatHistoryService = screeningChatHistoryService;
         this.portfolioHoldingsAssistantService = portfolioHoldingsAssistantService;
-    }
-
-    @PostMapping("/grid-query")
-    public GridAiResponse query(@RequestBody GridAiRequest request) {
-        log.info("Processing grid query request: {}", request);
-        return service.process(request);
     }
 
     @PostMapping("/screening-chat")
@@ -47,12 +39,12 @@ public class GridAiController {
 
     @GetMapping("/screening-chat/{portfolioManagerId}/history")
     public ScreeningChatHistoryResponse screeningChatHistory(@PathVariable String portfolioManagerId) {
-        return screeningChatService.getHistory(portfolioManagerId);
+        return screeningChatHistoryService.getHistory(portfolioManagerId);
     }
 
     @DeleteMapping("/screening-chat/{portfolioManagerId}/history")
     public void clearScreeningChatHistory(@PathVariable String portfolioManagerId) {
-        screeningChatService.clearHistory(portfolioManagerId);
+        screeningChatHistoryService.clearHistory(portfolioManagerId);
     }
 
     @PostMapping("/portfolio-holdings-assistant")

@@ -62,7 +62,7 @@
         <filter-class>org.apache.solr.servlet.SolrDispatchFilter</filter-class>
         <!--
         Exclude patterns is a list of directories that would be short circuited by the
-        SolrDispatchFilter. It includes all Admin UI related static content.
+        SolrDispatchFilter. It includes all Admin UI related static message.
         NOTE: It is NOT a pattern but only matches the start of the HTTP ServletPath.
         -->
         <init-param>

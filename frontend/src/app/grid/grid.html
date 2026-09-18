@@ -1,15 +1,16 @@
 <div class="screening-layout">
   <div class="grid-panel">
-    <div class="toolbar">
-      <input type="text" [(ngModel)]="query" placeholder="e.g. Show high-risk securities and sort by risk score descending" class="query-input">
-      <button class="ask-ai-btn" (click)="askAI()" [disabled]="gridAiService.loading()">
-        @if (!gridAiService.loading()) {
-          <span>Run Security Screening AI</span>
-        } @else {
-          <span><span class="spinner"></span> Loading...</span>
-        }
-      </button>
-    </div>
+<!--    <div class="toolbar">-->
+<!--      <input type="text" [(ngModel)]="query" placeholder="e.g. Show high-risk securities and sort by risk score descending" class="query-input">-->
+<!--      <button class="ask-ai-btn" (click)="askAI()" [disabled]="gridAiService.loading()">-->
+<!--        <ng-container *ngIf="!gridAiService.loading(); else loadingAi">-->
+<!--          <span>Run Security Screening AI</span>-->
+<!--        </ng-container>-->
+<!--        <ng-template #loadingAi>-->
+<!--          <span><span class="spinner"></span> Loading...</span>-->
+<!--        </ng-template>-->
+<!--      </button>-->
+<!--    </div>-->
 
     <div class="preset-row">
       <button class="preset-btn" (click)="runPreset('Show securities with risk score above 70 and sort by risk score descending')">High Risk</button>
@@ -43,13 +44,24 @@
 
     <div class="chat-messages">
       @if (chatMessages.length === 0) {
-        <div class="chat-empty">Ask about screening rationale, risks, or better-margin alternatives.</div>
+        <div class="chat-empty">
+          Ask about screening rationale, risks, or better-margin alternatives.
+        </div>
       }
 
-      @for (msg of chatMessages; track $index) {
-        <div class="chat-message" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
-          <div class="chat-role">{{ msg.role === 'user' ? 'You' : 'Assistant' }}</div>
-          <div class="chat-content" [title]="msg.content">{{ msg.summary }}</div>
+      @for (chat of chatMessages; track $index) {
+        <div
+          class="chat-message"
+          [class.user]="chat.role === 'user'"
+          [class.assistant]="chat.role === 'assistant'"
+        >
+          <div class="chat-role">
+            {{ chat.role === 'user' ? 'You' : 'Assistant' }}
+          </div>
+
+          <div class="chat-content" [title]="chat.message">
+            {{ chat.message }}
+          </div>
         </div>
       }
     </div>
@@ -63,11 +75,12 @@
         (keyup.enter)="sendScreeningChat()"
       />
       <button class="chat-send-btn" [disabled]="chatLoading || !chatInput.trim()" (click)="sendScreeningChat()">
-        @if (!chatLoading) {
+        <ng-container *ngIf="!chatLoading; else chatLoadingTpl">
           <span>Send</span>
-        } @else {
+        </ng-container>
+        <ng-template #chatLoadingTpl>
           <span>...</span>
-        }
+        </ng-template>
       </button>
     </div>
   </aside>

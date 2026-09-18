@@ -56,8 +56,8 @@
 //            List<Message> messages = new ArrayList<>();
 //            for (Map<String, String> item : stored) {
 //                String role = item.getOrDefault("role", "assistant");
-//                String content = item.getOrDefault("content", "");
-//                messages.add(toMessage(role, content));
+//                String message = item.getOrDefault("message", "");
+//                messages.add(toMessage(role, message));
 //            }
 //            return messages;
 //        } catch (Exception e) {
@@ -72,7 +72,7 @@
 //                .filter(Objects::nonNull)
 //                .map(message -> Map.of(
 //                        "role", roleOf(message),
-//                        "content", message.getText() == null ? "" : message.getText()
+//                        "message", message.getText() == null ? "" : message.getText()
 //                ))
 //                .toList();
 //        try {
@@ -92,11 +92,11 @@
 //        return PREFIX + conversationId;
 //    }
 //
-//    private Message toMessage(String role, String content) {
+//    private Message toMessage(String role, String message) {
 //        return switch (role) {
-//            case "user" -> new UserMessage(content);
-//            case "system" -> new SystemMessage(content);
-//            default -> new AssistantMessage(content);
+//            case "user" -> new UserMessage(message);
+//            case "system" -> new SystemMessage(message);
+//            default -> new AssistantMessage(message);
 //        };
 //    }
 //

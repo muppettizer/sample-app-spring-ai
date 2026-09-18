@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import type { ScreeningChatResponse, GridAiResponse } from './grid-ai.model';
+import type { ScreeningChatResponse, GridAiResponse, ScreeningChatHistoryResponse } from './grid-ai.model';
 
 @Injectable({
   providedIn: 'root'
@@ -40,8 +40,8 @@ export class GridAiService {
     });
   }
 
-  public getScreeningChatHistory(portfolioManagerId: string): Observable<ScreeningChatResponse> {
-    return this.http.get<ScreeningChatResponse>(`${this.apiBase}/screening-chat/${encodeURIComponent(portfolioManagerId)}/history`);
+  public getScreeningChatHistory(portfolioManagerId: string): Observable<ScreeningChatHistoryResponse> {
+    return this.http.get<ScreeningChatHistoryResponse>(`${this.apiBase}/screening-chat/${encodeURIComponent(portfolioManagerId)}/history`);
   }
 
   public clearScreeningChatHistory(portfolioManagerId: string): Observable<void> {

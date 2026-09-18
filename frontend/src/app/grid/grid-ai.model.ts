@@ -1,7 +1,6 @@
-export interface ChatMessageDto {
+export interface ScreeningChatMessage {
   role: 'user' | 'assistant' | 'system';
-  content: string;
-  summary: string;
+  message: string;
 }
 
 export interface GridAiResponse {
@@ -11,13 +10,18 @@ export interface GridAiResponse {
   columnSizing?: Record<string, number> | null;
 }
 
+export interface ScreeningChatHistoryResponse {
+  portfolioManagerId: string;
+  messages: ScreeningChatMessage[];
+}
+
 export interface ScreeningChatResponse {
   // backend always includes a portfolioManagerId (normalized by the server)
   portfolioManagerId: string;
   // assistantMessage may be null when not provided
   assistantMessage: string | null;
-  // history is always returned as a List<ChatMessageDto> from the backend
-  history: ChatMessageDto[];
+  // history is always returned as a List<ChatMessageDto> from the backend for chat POST responses
+  history: ScreeningChatMessage[];
   // gridUpdate can be null when no structured response is present
   gridUpdate: GridAiResponse | null;
 }
