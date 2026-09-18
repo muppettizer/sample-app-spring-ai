@@ -6,7 +6,7 @@ export interface ChatMessageDto {
 
 export interface GridAiResponse {
   filter?: Record<string, unknown> | null;
-  sort?: Array<Record<string, string>> | null;
+  sort?: Record<string, string>[] | null;
   columnVisibility?: Record<string, boolean> | null;
   columnSizing?: Record<string, number> | null;
 }

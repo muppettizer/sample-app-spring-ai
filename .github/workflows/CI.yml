@@ -55,7 +55,7 @@ jobs:
 
       - name: Lint
         working-directory: frontend
-        run: npm run lint
+        run: npx ng lint
 
       - name: Test
         working-directory: frontend

@@ -206,7 +206,7 @@ export class GridComponent implements OnInit {
     if (result.columnVisibility && typeof result.columnVisibility === 'object') {
       const visibilityState = Object.entries(result.columnVisibility).map(([colId, visible]) => ({
         colId,
-        hide: !Boolean(visible)
+        hide: !visible
       }));
       this.gridApi.applyColumnState({ state: visibilityState });
     }
