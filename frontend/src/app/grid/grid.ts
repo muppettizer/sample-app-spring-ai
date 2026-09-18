@@ -224,8 +224,9 @@ export class GridComponent implements OnInit {
   }
 
   runPreset(preset: string) {
-    this.query = preset;
-    this.askAI();
+    // Populate the chat input with the preset and trigger the screening chat flow
+    this.chatInput = preset;
+    this.sendScreeningChat();
   }
 
   sendScreeningChat(): void {
