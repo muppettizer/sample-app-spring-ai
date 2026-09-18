@@ -13,7 +13,7 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>sample-app-spring-ai</name>
 	<properties>
-		<java.version>17</java.version>
+		<java.version>25</java.version>
 		<spring-ai.version>2.0.0-M5</spring-ai.version>
 	</properties>
 	<dependencies>

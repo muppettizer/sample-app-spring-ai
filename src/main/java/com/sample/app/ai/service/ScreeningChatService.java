@@ -1,10 +1,6 @@
 package com.sample.app.ai.service;
 
-import com.sample.app.ai.model.ChatMessageDto;
-import com.sample.app.ai.model.GridAiResponse;
-import com.sample.app.ai.model.ScreeningChatHistoryResponse;
-import com.sample.app.ai.model.ScreeningChatRequest;
-import com.sample.app.ai.model.ScreeningChatResponse;
+import com.sample.app.ai.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -15,6 +11,7 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +19,8 @@ import java.util.Map;
 @Slf4j
 @Service
 public class ScreeningChatService {
+
+    private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
@@ -34,6 +33,7 @@ public class ScreeningChatService {
     }
 
     public ScreeningChatResponse chat(ScreeningChatRequest request) {
+        log.info("Processing screening chat request {}", request.toString());
         String pmId = normalizePortfolioManagerId(request.portfolioManagerId());
         String userMessage = request.message() == null ? "" : request.message().trim();
         if (userMessage.isEmpty()) {
@@ -63,43 +63,34 @@ public class ScreeningChatService {
                 .user(context)
                 .call();
 
-        // Try to map the full assistant response into a structured entity first
-        String assistantMessage = null;
-        GridAiResponse gridUpdate = null;
+        AssistantMessageEntity response = null;
         try {
-            var assistantEntity = chatCallResult.entity(com.sample.app.ai.model.AssistantMessageEntity.class);
-            if (assistantEntity != null) {
-                assistantMessage = assistantEntity.assistantMessage();
-                gridUpdate = assistantEntity.gridUpdate();
-                log.info("AssistantMessageEntity mapped: gridUpdate {}", gridUpdate != null ? "present" : "absent");
-            }
+            response = chatClient.prompt()
+                    .advisors(MessageChatMemoryAdvisor.builder(chatMemory).build())
+                    .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, pmId))
+                    .user(context)
+                    .call()
+                    .entity(AssistantMessageEntity.class);
         } catch (Exception e) {
-            log.debug("AssistantMessageEntity mapping failed: {}", e.getMessage());
+            log.error("Error during chat client call for portfolioManagerId={}: {}", pmId, e.getMessage(), e);
+            throw new RuntimeException(e);
         }
 
-        // Fallback: if we didn't get a structured assistant message, use raw content and try mapping GridAiResponse alone
-        if (assistantMessage == null) {
-            assistantMessage = chatCallResult.content();
-            try {
-                gridUpdate = chatCallResult.entity(GridAiResponse.class);
-                if (gridUpdate != null) {
-                    log.info("GridAiResponse parsed via entity mapping");
-                }
-            } catch (Exception e) {
-                log.debug("Automatic entity mapping to GridAiResponse failed: {}", e.getMessage());
-                gridUpdate = parseGridAiResponse(assistantMessage);
-            }
-        }
-
-        log.info("GridAiResponse parsed: {}", gridUpdate != null ? "SUCCESS" : "NOT FOUND");
+        // Try to map the full assistant response into a structured entity first
+        assert response != null;
+        var assistantMessage = response.assistantMessage();
+        var gridUpdate = response.gridUpdate();
 
         // Log result summary (length and a short preview) and history size
         ScreeningChatHistoryResponse history = getHistory(pmId);
         log.info("Assistant response for {} ({} chars). History size={}", pmId,
                 assistantMessage == null ? 0 : assistantMessage.length(), history.history().size());
         log.info("Assistant preview: {}", truncateForLog(assistantMessage, 200));
-
-        log.info("Grid Update:\n\n{}\n", gridUpdate);
+        log.info("Grid Update:\n{}",
+                gridUpdate == null
+                        ? "{}"
+                        : jsonMapper.writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(gridUpdate));
 
         return new ScreeningChatResponse(pmId, assistantMessage, history.history(), gridUpdate);
     }
