@@ -1,13 +1,23 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { AgGridAngular } from 'ag-grid-angular';
-import { ColDef, GridApi, IServerSideDatasource, RowSelectionOptions, SetFilterValuesFuncParams, themeQuartz, ValueFormatterParams } from 'ag-grid-community';
-import { FormsModule } from '@angular/forms';
-import { ToastrService } from 'ngx-toastr';
-import { GridAiService } from './grid-ai.service';
-import { SolrGridService } from './solr-grid.service';
-import { CustomButtonCellRendererComponent } from './actions/custom-button-cell-renderer.component';
-import type { ScreeningChatMessage, ScreeningChatResponse } from './grid-ai.model';
+import {Component, OnInit, signal} from '@angular/core';
+import {CommonModule} from '@angular/common';
+import {AgGridAngular} from 'ag-grid-angular';
+import {
+  ColDef, FilterModel,
+  GridApi,
+  IServerSideDatasource,
+  RowSelectedEvent,
+  RowSelectionOptions,
+  SetFilterValuesFuncParams,
+  themeQuartz,
+  ValueFormatterParams
+} from 'ag-grid-community';
+import {FormsModule} from '@angular/forms';
+import {ToastrService} from 'ngx-toastr';
+import {GridAiService} from './grid-ai.service';
+import {SolrGridService} from './solr-grid.service';
+import {CustomButtonCellRendererComponent} from './actions/custom-button-cell-renderer.component';
+import {GridUpdate, ScreeningChatMessage, ScreeningChatResponse} from './grid-ai.model';
+import {finalize} from 'rxjs/operators';
 
 @Component({
   selector: 'app-grid',
@@ -23,12 +33,30 @@ export class GridComponent implements OnInit {
   query = '';
   portfolioManagerId = 'pm-001';
   chatInput = '';
-  chatLoading = false;
+  chatLoading = signal(false);
   chatMessages: ScreeningChatMessage[] = [];
   theme = themeQuartz;
+
   rowSelection: RowSelectionOptions = {
-    mode: 'multiRow'
+    mode: 'multiRow',
+    selectAll: 'currentPage',
+    headerCheckbox: false,
+    ctrlASelectsRows: true
   };
+
+  readonly maxSelected = 3;
+
+  onRowSelected(event: RowSelectedEvent): void {
+    if (!event.node.isSelected()) {
+      return;
+    }
+
+    const selectedCount = event.api.getSelectedRows().length;
+
+    if (selectedCount > this.maxSelected) {
+      event.node.setSelected(false);
+    }
+  }
 
   gridOptions: any = {
     rowModelType: 'serverSide'
@@ -168,105 +196,138 @@ export class GridComponent implements OnInit {
     });
   }
 
-  askAI() {
-    if (!this.query.trim()) {
-      this.toastr.warning('Type a screening instruction first', 'Prompt required');
-      return;
-    }
-
-    this.gridAiService.askAI(this.query, this.gridApi.getState(), this.getStructuredSchemaSafe()).subscribe({
-      next: (result) => {
-        this.applyResult(result);
-      },
-      error: (error) => {
-        this.toastr.error('Network error or server unavailable', 'Error');
-      }
-    });
-  }
-
-  applyResult(result: any) {
+  applyResult(result: GridUpdate) {
     if (!result || typeof result !== 'object') {
       this.toastr.error('AI response is not valid JSON object', 'Invalid response');
       return;
     }
 
-    if (result.filter && typeof result.filter === 'object') {
-      this.gridApi.setFilterModel(result.filter);
-    }
+    console.log(
+      'Applying state:',
+      JSON.stringify(result, null, 2)
+    );
 
-    if (Array.isArray(result.sort) && result.sort.length > 0) {
-      this.gridApi.applyColumnState({
-        state: result.sort.map((entry: any) => ({
-          colId: entry?.colId,
-          sort: entry?.sort
-        })).filter((entry: any) => !!entry.colId && !!entry.sort),
-        defaultState: { sort: null }
-      });
-    }
+    const filterModel = result?.filterModel as FilterModel;
+    this.gridApi.setFilterModel(filterModel);
+    // const sortModel = result?.sortModel;
+    // const hiddenColIds = result?.columnVisibility as string[];
+    // const columnSizingModel = result?.columnSizingModel as ColumnSizingModel[];
 
-    if (result.columnVisibility && typeof result.columnVisibility === 'object') {
-      const visibilityState = Object.entries(result.columnVisibility).map(([colId, visible]) => ({
-        colId,
-        hide: !visible
-      }));
-      this.gridApi.applyColumnState({ state: visibilityState });
-    }
+    // console.log(
+    //   'Applying filter:',
+    //   JSON.stringify(filterModel, null, 2)
+    // );
 
-    if (result.columnSizing && typeof result.columnSizing === 'object') {
-      const sizingState = Object.entries(result.columnSizing).map(([colId, width]) => ({
-        colId,
-        width: Number(width)
-      })).filter(entry => Number.isFinite(entry.width));
-      this.gridApi.applyColumnState({ state: sizingState });
-    }
+    // console.log(
+    //   'Applying sort:',
+    //   JSON.stringify(sortModel, null, 2)
+    // );
 
-    this.toastr.success('AI screening instructions applied', 'Done');
+    // console.log(
+    //   'Applying hiddenColIds:',
+    //   JSON.stringify(hiddenColIds, null, 2)
+    // );
+
+    // console.log(
+    //   'Applying columnSizingModel:',
+    //   JSON.stringify(columnSizingModel, null, 2)
+    // );
+
+    // this.gridApi.setFilterModel(filterModel);
+
+    // console.log(
+    //   'Grid filter model:',
+    //   JSON.stringify(this.gridApi.getFilterModel(), null, 2)
+    // );
+
+    // this.gridApi.applyColumnState
+
+    //
+    // if (Array.isArray(result.sort) && result.sort.length > 0) {
+    //   this.gridApi.applyColumnState({
+    //     state: result.sort.map((entry: any) => ({
+    //       colId: entry?.colId,
+    //       sort: entry?.sort
+    //     })).filter((entry: any) => !!entry.colId && !!entry.sort),
+    //     defaultState: { sort: null }
+    //   });
+    // }
+    //
+    // if (result.columnVisibility && typeof result.columnVisibility === 'object') {
+    //   const visibilityState = Object.entries(result.columnVisibility).map(([colId, visible]) => ({
+    //     colId,
+    //     hide: !visible
+    //   }));
+    //   this.gridApi.applyColumnState({ state: visibilityState });
+    // }
+    //
+    // if (result.columnSizing && typeof result.columnSizing === 'object') {
+    //   const sizingState = Object.entries(result.columnSizing).map(([colId, width]) => ({
+    //     colId,
+    //     width: Number(width)
+    //   })).filter(entry => Number.isFinite(entry.width));
+    //   this.gridApi.applyColumnState({ state: sizingState });
+    // }
+    //
+    // // Important with Server-Side Row Model
+    // this.gridApi.refreshServerSide({purge: true});
+    //
+    // this.toastr.success('AI screening instructions applied', 'Done');
   }
 
-  runPreset(preset: string) {
-    // Populate the chat input with the preset and trigger the screening chat flow
+  runPreset(preset: string): void {
     this.chatInput = preset;
     this.sendScreeningChat();
   }
 
   sendScreeningChat(): void {
-     const message = this.chatInput.trim();
-     if (!message || this.chatLoading) {
-       return;
-     }
+    const message = this.chatInput.trim();
 
-     this.chatLoading = true;
-      this.gridAiService.screeningChat(
-       this.portfolioManagerId,
-       message,
-       this.gridApi?.getState?.() ?? {},
-       this.getStructuredSchemaSafe(),
-       this.gridApi?.getSelectedRows?.() ?? []
-      ).subscribe({
-        next: (response: ScreeningChatResponse) => {
-         console.log('Screening chat response:', response);
-         console.log('assistantMessage:', response?.assistantMessage);
-         console.log('gridUpdate:', response?.gridUpdate);
+    if (!message || this.chatLoading()) {
+      return;
+    }
 
-         this.chatMessages = response?.history ?? [];
-         this.chatInput = '';
+    this.chatLoading.set(true);
 
-         // Apply GridAiResponse to update grid if available
-         if (response?.gridUpdate) {
-           console.log('Applying grid update:', response.gridUpdate);
-           this.applyResult(response.gridUpdate);
-           this.toastr.success('Grid updated based on AI screening', 'Grid Updated');
-         } else {
-           console.warn('No gridUpdate in response');
-         }
-       },
-       error: (err) => {
-         console.error('Chat error:', err);
-         this.toastr.error('Failed to send screening chat message', 'Chat error');
-       },
-       complete: () => { this.chatLoading = false; }
-     });
-   }
+    this.gridAiService.screeningChat(
+      this.portfolioManagerId,
+      message,
+      this.gridApi?.getState?.() ?? {},
+      this.getStructuredSchemaSafe(),
+      this.gridApi?.getSelectedRows?.() ?? []
+    )
+    .pipe(
+      finalize(() => this.chatLoading.set(false))
+    )
+    .subscribe({
+      next: (response: ScreeningChatResponse) => {
+        console.log('Screening chat response:', response);
+        console.log('explanation:', response?.assistantMessage);
+        console.log('gridUpdate:', response?.gridUpdate);
+
+        this.chatMessages = response?.history ?? [];
+
+        if (response?.gridUpdate) {
+          console.log('Applying grid update:', response.gridUpdate);
+          this.applyResult(response.gridUpdate);
+          this.toastr.success(
+            'Grid updated based on AI screening',
+            'Grid Updated'
+          );
+        } else {
+          console.warn('No gridUpdate in response');
+        }
+      },
+      error: (err) => {
+        console.error('Chat error:', err);
+        this.toastr.error(
+          'Failed to send screening chat message',
+          'Chat error'
+        );
+      }
+    });
+  }
+
 
   clearChatHistory(): void {
     this.gridAiService.clearScreeningChatHistory(this.portfolioManagerId).subscribe({

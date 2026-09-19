@@ -4,5 +4,5 @@ import java.util.List;
 
 public record ScreeningChatHistoryResponse(
         String portfolioManagerId,
-        List<ScreeningChatMessage> messages
+        List<ScreeningChatHistoryMessage> messages
 ) {}

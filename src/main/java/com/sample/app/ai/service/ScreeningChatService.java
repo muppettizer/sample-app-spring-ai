@@ -1,5 +1,6 @@
 package com.sample.app.ai.service;
 
+import com.sample.app.ai.error.ScreeningChatException;
 import com.sample.app.ai.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -73,7 +74,7 @@ public class ScreeningChatService {
         AssistantMessageEntity response;
 
         try {
-            log.info("Calling '{}' for portfolioManagerId={}", aiBackend(), pmId);
+            log.info("Calling '{}' for portfolioManagerId={} ...", aiBackend(), pmId);
             response = chatClient.prompt()
                     .advisors(
                             MessageChatMemoryAdvisor
@@ -110,20 +111,12 @@ public class ScreeningChatService {
                     .call()
                     .entity(AssistantMessageEntity.class);
 
-        } catch (Exception e) {
-            log.error(
-                    "Error during chat client call for portfolioManagerId={}: {}",
-                    pmId,
-                    e.getMessage(),
-                    e);
-
-            throw new RuntimeException(
-                    "Failed to process screening chat",
-                    e);
+        } catch (Exception ex) {
+            throw new ScreeningChatException("Chat with " + aiBackend() + " failed.", ex);
         }
 
-        String assistantMessage = response.assistantMessage();
-        GridAiResponse gridUpdate = response.gridUpdate();
+        String assistantMessage = response.explanation();
+        GridUpdate gridUpdate = response.gridUpdate();
 
         ScreeningChatHistoryResponse history = chatHistoryService.getHistory(pmId);
 

@@ -1,0 +1,11 @@
+# https://docs.spring.io/spring-ai/reference/api/chat/comparison.html
+spring:
+  ai:
+    model:
+      chat: mistral
+
+    # https://console.mistral.ai/
+    mistralai:
+      api-key: ${MISTRAL_API_KEY}
+      chat:
+        model: mistral-small-latest

@@ -1,0 +1,1 @@
+http://localhost:8983/solr/security-screener/select?q=*%3A*&rows=0&wt=json&facet=true&facet.limit=-1&facet.sort=index&facet.mincount=1&facet.field=assetClass

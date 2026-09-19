@@ -61,27 +61,7 @@ services:
       - ./data:/data
     entrypoint:
       - sh
-      - -c
-      - |
-        echo 'Waiting for Solr...'
-        until curl -s http://solr:8983/solr/admin/info/system > /dev/null; do
-          sleep 5
-        done
-        echo 'Resetting collection if it exists...'
-        curl -s -X POST "http://solr:8983/solr/admin/collections?action=DELETE&name=security-screener" > /dev/null || true
-        echo 'Creating collection...'
-        curl -X POST "http://solr:8983/solr/admin/collections?action=CREATE&name=security-screener&numShards=1&replicationFactor=1&collection.configName=_default"
-        echo 'Disabling auto-create fields...'
-        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/security-screener/config" -d '{"set-user-property": {"update.autoCreateFields":"false"}}'
-        echo 'Ensuring marginRate exists before replace...'
-        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/security-screener/schema" -d '{"add-field":{"name":"marginRate","type":"pfloat","stored":true,"indexed":true}}'
-        echo 'Updating schema...'
-        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/security-screener/schema" -d @/data/security-screener-schema.json
-        echo 'Seeding data...'
-        curl -X POST -H "Content-Type: application/json" "http://solr:8983/solr/security-screener/update?commit=true" -d @/data/securities.json
-        echo 'Done'
-        echo 'Testing collection...'
-        curl "http://solr:8983/solr/security-screener/select?q=*:*&rows=2&wt=json"
+      - /data/init-solr.sh
 
   wiremock:
     image: wiremock/wiremock:3.12.1
@@ -96,7 +76,7 @@ services:
     labels:
       - "org.springframework.boot.service-connection=redis"
     ports:
-      - '6379'
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -105,6 +85,17 @@ services:
       timeout: 3s
       retries: 5
 
+  redis-insight:
+    image: 'redis/redisinsight:latest'
+    ports:
+      - '5540:5540'
+    volumes:
+      - redis_insight_data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+
 volumes:
   solr_data:
   redis_data:
+  redis_insight_data:

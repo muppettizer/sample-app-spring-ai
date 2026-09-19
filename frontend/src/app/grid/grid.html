@@ -13,6 +13,7 @@
 <!--    </div>-->
 
     <div class="preset-row">
+      <button class="preset-btn" (click)="runPreset('Find securities with matching Asset Class')">Find similar</button>
       <button class="preset-btn" (click)="runPreset('Show securities with risk score above 70 and sort by risk score descending')">High Risk</button>
       <button class="preset-btn" (click)="runPreset('Show only sanctions flagged securities')">Sanctions Flagged</button>
       <button class="preset-btn" (click)="runPreset('Show securities pending review and hide currency column')">Pending Review</button>
@@ -70,17 +71,18 @@
       <input
         type="text"
         [(ngModel)]="chatInput"
+        [disabled]="chatLoading()"
         placeholder="Ask Screening AI..."
         class="chat-input"
         (keyup.enter)="sendScreeningChat()"
       />
-      <button class="chat-send-btn" [disabled]="chatLoading || !chatInput.trim()" (click)="sendScreeningChat()">
-        <ng-container *ngIf="!chatLoading; else chatLoadingTpl">
+      <button class="chat-send-btn" [disabled]="chatLoading() || !chatInput.trim()" (click)="sendScreeningChat()">
+        @if (chatLoading()) {
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Sending...</span>
+        } @else {
           <span>Send</span>
-        </ng-container>
-        <ng-template #chatLoadingTpl>
-          <span>...</span>
-        </ng-template>
+        }
       </button>
     </div>
   </aside>

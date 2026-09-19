@@ -1,7 +1,7 @@
 package com.sample.app.ai.service;
 
 import com.sample.app.ai.model.AssistantMessageEntity;
-import com.sample.app.ai.model.ScreeningChatMessage;
+import com.sample.app.ai.model.ScreeningChatHistoryMessage;
 import com.sample.app.ai.model.ScreeningChatHistoryResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -30,7 +30,7 @@ public class ScreeningChatHistoryService {
 
         String pmId = normalizePortfolioManagerId(portfolioManagerId);
 
-        List<ScreeningChatMessage> history = chatMemory.get(pmId).stream()
+        List<ScreeningChatHistoryMessage> history = chatMemory.get(pmId).stream()
                 .filter(message ->
                         message instanceof UserMessage ||
                         message instanceof AssistantMessage)
@@ -47,10 +47,10 @@ public class ScreeningChatHistoryService {
                 normalizePortfolioManagerId(portfolioManagerId));
     }
 
-    private ScreeningChatMessage toChatMessage(Message message) {
+    private ScreeningChatHistoryMessage toChatMessage(Message message) {
         return switch (message) {
             case UserMessage user ->
-                    new ScreeningChatMessage(
+                    new ScreeningChatHistoryMessage(
                             "user",
                             user.getText());
 
@@ -63,7 +63,7 @@ public class ScreeningChatHistoryService {
         };
     }
 
-    private ScreeningChatMessage toAssistantChatMessage(
+    private ScreeningChatHistoryMessage toAssistantChatMessage(
             AssistantMessage message) {
 
         try {
@@ -72,13 +72,13 @@ public class ScreeningChatHistoryService {
                             message.getText(),
                             AssistantMessageEntity.class);
 
-            return new ScreeningChatMessage(
+            return new ScreeningChatHistoryMessage(
                     "assistant",
-                    entity.assistantMessage());
+                    entity.explanation());
         } catch (Exception e) {
             log.warn("Unable to parse assistant message", e);
 
-            return new ScreeningChatMessage(
+            return new ScreeningChatHistoryMessage(
                     "assistant",
                     message.getText());
         }

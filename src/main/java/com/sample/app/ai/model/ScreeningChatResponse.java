@@ -5,6 +5,6 @@ import java.util.List;
 public record ScreeningChatResponse(
         String portfolioManagerId,
         String assistantMessage,
-        List<ScreeningChatMessage> history,
-        GridAiResponse gridUpdate
+        List<ScreeningChatHistoryMessage> history,
+        GridUpdate gridUpdate
 ) {}

@@ -28,4 +28,13 @@ public class AiModelConfig {
             return ChatClient.create(model);
         }
     }
+
+//    @Profile("mistral")
+//    @Configuration
+//    static class MistralConfig {
+//        @Bean
+//        public ChatClient mistralChatClient(MistralAiChatModel model) {
+//            return ChatClient.create(model);
+//        }
+//    }
 }

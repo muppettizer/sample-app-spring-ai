@@ -9,4 +9,7 @@ spring:
 
     # https://platform.openai.com/login?next=%2Fapi-keys
     openai:
-      api-key: ${OPENAI_API_KEY}
+      api-key: ${GROQ_API_KEY}
+      base-url: https://api.groq.com/openai
+      chat:
+        model: llama-3.3-70b-versatile

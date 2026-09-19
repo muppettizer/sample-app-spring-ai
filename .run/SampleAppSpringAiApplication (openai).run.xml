@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="SampleAppSpringAiApplication (openai)" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="openai" />
+    <envs>
+      <env name="GOOGLE_API_KEY" value="AQ.Ab8RN6LZBzNB6gpbKnJtJeKJ__q2xzJQpvXDDnUQEE0d8LoZFg" />
+      <env name="OPENAI_API_KEY" value="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" />
+      <env name="MISTRAL_API_KEY" value="bHySsi68ZPXRgSkI6IvnPREeDDORuef1" />
+    </envs>
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <module name="sample-app-spring-ai" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.sample.app.ai.SampleAppSpringAiApplication" />
+    <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

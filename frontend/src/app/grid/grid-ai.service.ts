@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import type { ScreeningChatResponse, GridAiResponse, ScreeningChatHistoryResponse } from './grid-ai.model';
+import type { ScreeningChatResponse, GridUpdate, ScreeningChatHistoryResponse } from './grid-ai.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class GridAiService {
 
   constructor(private http: HttpClient) {}
 
-  public askAI(userQuery: string, gridState: any, structuredSchema: any): Observable<GridAiResponse> {
+  public askAI(userQuery: string, gridState: any, structuredSchema: any): Observable<GridUpdate> {
     this.loading.set(true);
     return this.http.post(`${this.apiBase}/grid-query`, {
       userQuery,
