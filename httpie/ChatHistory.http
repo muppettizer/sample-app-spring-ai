@@ -1,0 +1,5 @@
+@portfolioManagerId = pm-001
+
+###
+
+GET http://localhost:8081/api/ai/screening-chat/{{portfolioManagerId}}/history

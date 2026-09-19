@@ -13,11 +13,11 @@
 <!--    </div>-->
 
     <div class="preset-row">
-      <button class="preset-btn" (click)="runPreset('Find securities with matching Asset Class')">Find similar</button>
-      <button class="preset-btn" (click)="runPreset('Show securities with risk score above 70 and sort by risk score descending')">High Risk</button>
-      <button class="preset-btn" (click)="runPreset('Show only sanctions flagged securities')">Sanctions Flagged</button>
-      <button class="preset-btn" (click)="runPreset('Show securities pending review and hide currency column')">Pending Review</button>
-      <button class="preset-btn" (click)="runPreset('Find securities similar to current screening context with better (lower) margin rate and sort by marginRate ascending')">Better Margin</button>
+      <button class="preset-btn" [disabled]="!hasSelectedRow()" (click)="runPreset('Find securities with matching Asset Class')">Find similar</button>
+      <button class="preset-btn" [disabled]="!hasSelectedRow()" (click)="runPreset('Show securities with risk score above 70 and sort by risk score descending')">High Risk</button>
+      <button class="preset-btn" [disabled]="!hasSelectedRow()" (click)="runPreset('Show only sanctions flagged securities')">Sanctions Flagged</button>
+      <button class="preset-btn" [disabled]="!hasSelectedRow()" (click)="runPreset('Show securities pending review and hide currency column')">Pending Review</button>
+      <button class="preset-btn" [disabled]="!hasSelectedRow()" (click)="runPreset('Find securities similar to current screening context with better (lower) margin rate and sort by marginRate ascending')">Better Margin</button>
     </div>
 
     <div class="grid-container">
@@ -29,18 +29,30 @@
         [columnDefs]="columnDefs"
         [defaultColDef]="defaultColDef"
         [theme]="theme"
-        (gridReady)="onGridReady($event)">
+        (gridReady)="onGridReady($event)"
+        (rowSelected)="onRowSelected($event)">
       </ag-grid-angular>
     </div>
   </div>
 
   <aside class="chat-panel">
     <div class="chat-header">
-      <div>
+      <div class="chat-heading">
         <div class="chat-title">Screening AI Chat Assistant</div>
         <div class="chat-subtitle">Portfolio Manager: {{ portfolioManagerId }}</div>
       </div>
-      <button class="chat-clear-btn" (click)="clearChatHistory()">Clear</button>
+
+      <div class="chat-actions">
+        <button class="chat-action-btn" (click)="clearGridFilters()">
+          Clear Filters
+        </button>
+
+        <span class="action-divider"></span>
+
+        <button class="chat-action-btn" (click)="clearChatHistory()">
+          Clear Chat
+        </button>
+      </div>
     </div>
 
     <div class="chat-messages">

@@ -44,7 +44,12 @@
   cursor: pointer;
 }
 
-.preset-btn:hover {
+.preset-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.preset-btn:hover:not(:disabled) {
   background: #e4e4e7;
 }
 
@@ -207,4 +212,62 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+
+  .chat-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .chat-title {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .chat-subtitle {
+    color: #667085;
+    font-size: 12px;
+  }
+
+  .chat-actions {
+    display: flex;
+    align-items: center;
+
+    button {
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      padding: 6px 8px;
+      color: #667085;
+      font-size: 12px;
+      cursor: pointer;
+      transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+
+      &:hover {
+        background: #f2f4f7;
+        color: #344054;
+      }
+
+      &:focus-visible {
+        outline: 2px solid #98a2b3;
+        outline-offset: 2px;
+      }
+
+      + button {
+        border-left: 1px solid #eaecf0;
+        border-radius: 0;
+        margin-left: 4px;
+        padding-left: 12px;
+      }
+    }
+  }
 }

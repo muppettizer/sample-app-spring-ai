@@ -38,23 +38,23 @@ export class GridComponent implements OnInit {
   theme = themeQuartz;
 
   rowSelection: RowSelectionOptions = {
-    mode: 'multiRow',
-    selectAll: 'currentPage',
-    headerCheckbox: false,
-    ctrlASelectsRows: true
+    mode: 'singleRow'
   };
 
-  readonly maxSelected = 3;
+  readonly maxSelected = 1;
+  readonly selectedRowCount = signal(0);
+
+  hasSelectedRow(): boolean {
+    return this.selectedRowCount() > 0;
+  }
 
   onRowSelected(event: RowSelectedEvent): void {
-    if (!event.node.isSelected()) {
-      return;
-    }
-
     const selectedCount = event.api.getSelectedRows().length;
+    this.selectedRowCount.set(selectedCount);
 
     if (selectedCount > this.maxSelected) {
       event.node.setSelected(false);
+      this.selectedRowCount.set(event.api.getSelectedRows().length);
     }
   }
 
@@ -276,6 +276,11 @@ export class GridComponent implements OnInit {
   }
 
   runPreset(preset: string): void {
+    if (!this.hasSelectedRow()) {
+      this.toastr.warning('Select a row before running a preset', 'Selection required');
+      return;
+    }
+
     this.chatInput = preset;
     this.sendScreeningChat();
   }
@@ -328,6 +333,9 @@ export class GridComponent implements OnInit {
     });
   }
 
+  clearGridFilters(): void {
+    this.gridApi.setFilterModel(null);
+  }
 
   clearChatHistory(): void {
     this.gridAiService.clearScreeningChatHistory(this.portfolioManagerId).subscribe({
