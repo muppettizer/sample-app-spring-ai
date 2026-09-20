@@ -128,8 +128,8 @@ This document explains each major feature of the AG Grid Security Screening app 
 - Supports switching memory backend by config.
 
 ### How it works
-- Config class: `src/main/java/com/sample/app/ai/config/ScreeningChatMemoryConfig.java`
-- Service class: `src/main/java/com/sample/app/ai/service/ScreeningChatService.java`
+- Config class: `src/main/java/com/sample/app/ai/screeningchat`
+- Service class: `src/main/java/com/sample/app/ai/screeningchat`
 - `portfolioManagerId` is used as `ChatMemory.CONVERSATION_ID`.
 - `MessageChatMemoryAdvisor` automatically:
   - reads memory for conversation before model call

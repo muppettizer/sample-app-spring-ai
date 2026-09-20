@@ -23,7 +23,7 @@ spring:
         command: up
       stop:
         command: down
-        timeout: 10s
+        timeout: 30s
         arguments:
           - "--volumes"
           - "--remove-orphans"
@@ -56,7 +56,7 @@ management:
 
 logging:
   level:
-    org.springframework.boot.autoconfigure: DEBUG
+#    org.springframework.boot.autoconfigure: DEBUG
     org.springframework.ai.chat.memory: DEBUG
     org.springframework.ai.model.chat.memory: DEBUG
     org.springframework.ai.model.chat.memory.repository.redis: DEBUG

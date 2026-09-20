@@ -12,6 +12,14 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAnimations(),
     provideHttpClient(),
-    importProvidersFrom(ToastrModule.forRoot())
+    importProvidersFrom(
+      ToastrModule.forRoot({
+        positionClass: 'toast-bottom-center',
+        timeOut: 3000,
+        closeButton: true,
+        progressBar: true,
+        newestOnTop: true
+      })
+    )
   ]
 };

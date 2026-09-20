@@ -1,0 +1,148 @@
+<aside class="chat-panel">
+  <div class="chat-header">
+    <div class="chat-heading">
+      <div class="chat-title">Screening AI Chat Assistant</div>
+      <div class="chat-subtitle">
+        Portfolio Manager: {{ portfolioManagerId }}
+      </div>
+    </div>
+
+    <div class="chat-actions">
+      <button
+        class="chat-action-btn"
+        type="button"
+        (click)="clearChatHistory()"
+        [disabled]="!activeChatSession || chatLoading()"
+      >
+        Clear Chat
+      </button>
+    </div>
+  </div>
+
+  <div class="preset-row">
+    <button
+      class="preset-btn"
+      type="button"
+      [disabled]="!selectedRowCount() || chatLoading()"
+      (click)="runPreset('Find securities with matching Asset Class')"
+    >
+      Find similar
+    </button>
+
+    <button
+      class="preset-btn"
+      type="button"
+      [disabled]="!selectedRowCount() || chatLoading()"
+      (click)="runPreset('Show securities with risk score above 70 and sort by risk score descending')"
+    >
+      High Risk
+    </button>
+
+    <button
+      class="preset-btn"
+      type="button"
+      [disabled]="!selectedRowCount() || chatLoading()"
+      (click)="runPreset('Show only sanctions flagged securities')"
+    >
+      Sanctions Flagged
+    </button>
+
+    <button
+      class="preset-btn"
+      type="button"
+      [disabled]="!selectedRowCount() || chatLoading()"
+      (click)="runPreset('Show securities pending review and hide currency column')"
+    >
+      Pending Review
+    </button>
+
+    <button
+      class="preset-btn"
+      type="button"
+      [disabled]="!selectedRowCount() || chatLoading()"
+      (click)="runPreset('Find securities similar to current screening context with better (lower) margin rate and sort by marginRate ascending')"
+    >
+      Better Margin
+    </button>
+  </div>
+
+  <div class="chat-tabs">
+    @for (session of chatSessions; track session.chatSessionId) {
+      <button
+        type="button"
+        class="chat-tab"
+        [class.active]="session === activeChatSession"
+        (click)="switchChatSession(session)"
+      >
+        {{ session.label }}
+      </button>
+    }
+
+    <button
+      type="button"
+      class="chat-new-session"
+      (click)="startNewChatSession()"
+      [disabled]="chatLoading()"
+      title="New Chat Session"
+      aria-label="New Chat Session"
+    >
+      <span aria-hidden="true">+</span>
+    </button>
+  </div>
+
+  <div class="chat-messages">
+    @if (chatMessages.length === 0) {
+      <div class="chat-empty">
+        Ask about screening rationale, risks, or better-margin alternatives.
+      </div>
+    }
+
+    @for (chat of chatMessages; track $index) {
+      <div
+        class="chat-message"
+        [class.user]="chat.role === 'user'"
+        [class.assistant]="chat.role === 'assistant'"
+      >
+        <div class="chat-role">
+          {{ chat.role === 'user' ? 'You' : 'Assistant' }}
+        </div>
+
+        <div
+          class="chat-content"
+          [title]="chat.message"
+        >
+          {{ chat.message }}
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="chat-input-row">
+    <input
+      type="text"
+      [(ngModel)]="chatInput"
+      [disabled]="chatLoading() || !activeChatSession"
+      placeholder="Ask Screening AI..."
+      class="chat-input"
+      (keyup.enter)="sendScreeningChat()"
+    />
+
+    <button
+      class="chat-send-btn"
+      type="button"
+      [disabled]="
+        chatLoading() ||
+        !activeChatSession ||
+        !chatInput.trim()
+      "
+      (click)="sendScreeningChat()"
+    >
+      @if (chatLoading()) {
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Sending...</span>
+      } @else {
+        <span>Send</span>
+      }
+    </button>
+  </div>
+</aside>

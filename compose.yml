@@ -27,8 +27,6 @@ services:
   solr-init:
     image: curlimages/curl:latest
     container_name: solr-init
-    labels:
-      - "org.springframework.boot.ignore=true"
     depends_on:
       solr:
         condition: service_healthy
@@ -39,8 +37,6 @@ services:
   cors-checker:
     image: curlimages/curl:latest
     container_name: cors-checker
-    labels:
-      - "org.springframework.boot.ignore=true"
     depends_on:
       solr-init:
         condition: service_started

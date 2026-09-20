@@ -14,19 +14,18 @@ import {
   themeQuartz,
   ValueFormatterParams
 } from 'ag-grid-community';
-import {FormsModule} from '@angular/forms';
 import {ToastrService} from 'ngx-toastr';
 import {GridAiService} from './grid-ai.service';
 import {ScreeningNotesService} from './screening-notes.service';
 import {SolrGridService} from './solr-grid.service';
 import {CustomButtonCellRendererComponent} from './actions/custom-button-cell-renderer.component';
-import {GridUpdate, ScreeningChatMessage, ScreeningChatResponse} from './grid-ai.model';
-import {finalize} from 'rxjs/operators';
+import {ScreeningChatComponent} from './screening-chat/screening-chat';
+import type {GridUpdate} from './screening-chat/models';
 
 @Component({
   selector: 'app-grid',
   standalone: true,
-  imports: [CommonModule, AgGridAngular, FormsModule, CustomButtonCellRendererComponent],
+  imports: [CommonModule, AgGridAngular, CustomButtonCellRendererComponent, ScreeningChatComponent],
   templateUrl: './grid.html',
   styleUrl: './grid.scss',
   host: { 'style': 'height: 100%; display: block;' }
@@ -36,9 +35,6 @@ export class GridComponent implements OnInit {
   gridApi!: GridApi;
   query = '';
   portfolioManagerId = 'pm-001';
-  chatInput = '';
-  chatLoading = signal(false);
-  chatMessages: ScreeningChatMessage[] = [];
   theme = themeQuartz;
 
   rowSelection: RowSelectionOptions = {
@@ -207,7 +203,6 @@ export class GridComponent implements OnInit {
 
   ngOnInit() {
     console.log('Grid component initialized');
-    this.loadChatHistory();
     this.loadScreeningNotes();
   }
 
@@ -360,84 +355,8 @@ export class GridComponent implements OnInit {
     // this.toastr.success('AI screening instructions applied', 'Done');
   }
 
-  runPreset(preset: string): void {
-    if (!this.hasSelectedRow()) {
-      this.toastr.warning('Select a row before running a preset', 'Selection required');
-      return;
-    }
-
-    this.chatInput = preset;
-    this.sendScreeningChat();
-  }
-
-  sendScreeningChat(): void {
-    const message = this.chatInput.trim();
-
-    if (!message || this.chatLoading()) {
-      return;
-    }
-
-    this.chatLoading.set(true);
-
-    this.gridAiService.screeningChat(
-      this.portfolioManagerId,
-      message,
-      this.gridApi?.getState?.() ?? {},
-      this.getStructuredSchemaSafe(),
-      this.gridApi?.getSelectedRows?.() ?? []
-    )
-    .pipe(
-      finalize(() => this.chatLoading.set(false))
-    )
-    .subscribe({
-      next: (response: ScreeningChatResponse) => {
-        console.log('Screening chat response:', response);
-        console.log('explanation:', response?.assistantMessage);
-        console.log('gridUpdate:', response?.gridUpdate);
-
-        this.chatMessages = response?.history ?? [];
-
-        if (response?.gridUpdate) {
-          console.log('Applying grid update:', response.gridUpdate);
-          this.applyResult(response.gridUpdate);
-          this.toastr.success(
-            'Grid updated based on AI screening',
-            'Grid Updated'
-          );
-        } else {
-          console.warn('No gridUpdate in response');
-        }
-      },
-      error: (err) => {
-        console.error('Chat error:', err);
-        this.toastr.error(
-          'Failed to send screening chat message',
-          'Chat error'
-        );
-      }
-    });
-  }
-
   clearGridFilters(): void {
     this.gridApi.setFilterModel(null);
-  }
-
-  clearChatHistory(): void {
-    this.gridAiService.clearScreeningChatHistory(this.portfolioManagerId).subscribe({
-      next: () => { this.chatMessages = []; },
-      error: () => this.toastr.error('Failed to clear chat messages', 'Chat error')
-    });
-  }
-
-  private loadChatHistory(): void {
-    this.gridAiService.getScreeningChatHistory(this.portfolioManagerId).subscribe({
-      next: (response) => {
-        this.chatMessages = response?.messages ?? [];
-      },
-      error: () => {
-        this.chatMessages = [];
-      }
-    });
   }
 
   private findSimilarBetterMargin(rowData: any): void {

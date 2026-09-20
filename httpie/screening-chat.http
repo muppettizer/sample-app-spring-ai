@@ -1,0 +1,67 @@
+@baseUrl = http://localhost:8081
+@portfolioManagerId = 12345
+#@chatSessionId = {{$uuid}}
+@chatSessionId = 123e4567-e89b-12d3-a456-426614174000
+
+### Get all chat sessions
+GET {{baseUrl}}/api/ai/screening-chat/sessions?portfolioManagerId={{portfolioManagerId}}
+
+### Create a new chat session
+# Copy the returned chatSessionId into @chatSessionId below
+POST {{baseUrl}}/api/ai/screening-chat/sessions
+Content-Type: application/json
+
+{
+  "portfolioManagerId": "{{portfolioManagerId}}"
+}
+
+> {%
+    client.global.set("chatSessionId", response.body.chatSessionId);
+%}
+
+### Send first message
+POST {{baseUrl}}/api/ai/screening-chat/sessions/{{chatSessionId}}/messages?portfolioManagerId={{portfolioManagerId}}
+Content-Type: application/json
+
+{
+  "message": "Show me bonds with a maturity date in the next 12 months.",
+  "gridContext": {
+    "filters": {},
+    "sort": [],
+    "visibleColumns": [
+      "securityId",
+      "securityName",
+      "assetClass",
+      "country",
+      "maturityDate"
+    ]
+  }
+}
+
+
+### Get chat history
+GET {{baseUrl}}/api/ai/screening-chat/sessions/{{chatSessionId}}/messages?portfolioManagerId={{portfolioManagerId}}
+
+
+### Send another message
+POST {{baseUrl}}/api/ai/screening-chat/sessions/{{chatSessionId}}/messages?portfolioManagerId={{portfolioManagerId}}
+Content-Type: application/json
+
+{
+  "message": "Now sort them by maturity date ascending.",
+  "gridContext": {
+    "filters": {},
+    "sort": [],
+    "visibleColumns": [
+      "securityId",
+      "securityName",
+      "assetClass",
+      "country",
+      "maturityDate"
+    ]
+  }
+}
+
+
+### Delete chat session
+DELETE {{baseUrl}}/api/ai/screening-chat/sessions/{{chatSessionId}}?portfolioManagerId={{portfolioManagerId}}

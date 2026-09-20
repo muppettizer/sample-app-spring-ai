@@ -1,7 +1,7 @@
 package com.sample.app.holdings;
 
-import com.sample.app.ai.model.PortfolioHoldingsAssistantRequest;
-import com.sample.app.ai.model.PortfolioHoldingsAssistantResponse;
+import com.sample.app.ai.screeningchat.model.PortfolioHoldingsAssistantRequest;
+import com.sample.app.ai.screeningchat.model.PortfolioHoldingsAssistantResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;

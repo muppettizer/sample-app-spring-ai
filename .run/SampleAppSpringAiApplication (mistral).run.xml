@@ -8,7 +8,7 @@
     </envs>
     <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
     <module name="sample-app-spring-ai" />
-    <option name="SPRING_BOOT_MAIN_CLASS" value="com.sample.app.ai.SampleAppSpringAiApplication" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.sample.app.ai.screeningchat.SampleAppSpringAiApplication" />
     <option name="VM_PARAMETERS" value="--enable-native-access=ALL-UNNAMED" />
     <method v="2">
       <option name="Make" enabled="true" />

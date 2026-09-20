@@ -17,13 +17,9 @@ export interface ScreeningChatHistoryResponse {
 }
 
 export interface ScreeningChatResponse {
-  // backend always includes a portfolioManagerId (normalized by the server)
   portfolioManagerId: string;
   chatSessionId?: string;
-  // explanation may be null when not provided
   assistantMessage: string | null;
-  // history is always returned as a List<ChatMessageDto> from the backend for chat POST responses
   history: ScreeningChatMessage[];
-  // gridUpdate can be null when no structured response is present
   gridUpdate: GridUpdate | null;
 }
