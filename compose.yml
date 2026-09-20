@@ -24,34 +24,9 @@ services:
       retries: 3
       start_period: 60s
 
-  cors-checker:
-    image: curlimages/curl:latest
-    labels:
-        - "org.springframework.boot.ignore=true"
-    container_name: cors-checker
-    depends_on:
-      solr:
-        condition: service_healthy
-    restart: "no"
-    command: >
-      sh -c "
-        echo '=== Testing CORS Configuration ===' &&
-        echo &&
-        echo '1. Testing CORS preflight OPTIONS request:' &&
-        curl -i -X OPTIONS -H 'Origin: http://localhost:4200' -H 'Access-Control-Request-Method: GET' -H 'Access-Control-Request-Headers: Content-Type' 'http://solr:8983/solr/mycollection/select?q=type%3ALOANS' &&
-        echo &&
-        echo '2. Testing CORS GET request (similar to your Angular app):' &&
-        curl -i -X GET -H 'Origin: http://localhost:4200' 'http://solr:8983/solr/mycollection/select?q=type%3ALOANS&start=0&rows=100&wt=json' &&
-        echo &&
-        echo '3. Testing basic admin endpoint:' &&
-        curl -i -X GET -H 'Origin: http://localhost:4200' 'http://solr:8983/solr/admin/collections?action=LIST' &&
-        echo &&
-        echo '=== CORS Testing Complete ==='
-      "
-
-
   solr-init:
     image: curlimages/curl:latest
+    container_name: solr-init
     labels:
       - "org.springframework.boot.ignore=true"
     depends_on:
@@ -59,9 +34,19 @@ services:
         condition: service_healthy
     volumes:
       - ./data:/data
-    entrypoint:
-      - sh
-      - /data/init-solr.sh
+    entrypoint: ["sh", "/data/solr-init.sh"]
+
+  cors-checker:
+    image: curlimages/curl:latest
+    container_name: cors-checker
+    labels:
+      - "org.springframework.boot.ignore=true"
+    depends_on:
+      solr-init:
+        condition: service_started
+    volumes:
+      - ./data:/data
+    entrypoint: ["sh", "/data/solr-cors.sh"]
 
   wiremock:
     image: wiremock/wiremock:3.12.1

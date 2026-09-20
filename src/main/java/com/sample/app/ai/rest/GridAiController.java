@@ -1,10 +1,10 @@
 package com.sample.app.ai.rest;
 
+import com.sample.app.ai.model.PortfolioHoldingsAssistantRequest;
+import com.sample.app.ai.model.PortfolioHoldingsAssistantResponse;
 import com.sample.app.ai.model.ScreeningChatHistoryResponse;
 import com.sample.app.ai.model.ScreeningChatRequest;
 import com.sample.app.ai.model.ScreeningChatResponse;
-import com.sample.app.ai.model.PortfolioHoldingsAssistantRequest;
-import com.sample.app.ai.model.PortfolioHoldingsAssistantResponse;
 import com.sample.app.ai.service.ScreeningChatHistoryService;
 import com.sample.app.ai.service.ScreeningChatService;
 import com.sample.app.holdings.PortfolioHoldingsAssistantService;

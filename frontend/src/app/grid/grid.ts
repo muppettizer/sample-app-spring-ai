@@ -4,7 +4,10 @@ import {AgGridAngular} from 'ag-grid-angular';
 import {
   ColDef, FilterModel,
   GridApi,
+  IRowNode,
   IServerSideDatasource,
+  Note,
+  NotesDataSource,
   RowSelectedEvent,
   RowSelectionOptions,
   SetFilterValuesFuncParams,
@@ -14,6 +17,7 @@ import {
 import {FormsModule} from '@angular/forms';
 import {ToastrService} from 'ngx-toastr';
 import {GridAiService} from './grid-ai.service';
+import {ScreeningNotesService} from './screening-notes.service';
 import {SolrGridService} from './solr-grid.service';
 import {CustomButtonCellRendererComponent} from './actions/custom-button-cell-renderer.component';
 import {GridUpdate, ScreeningChatMessage, ScreeningChatResponse} from './grid-ai.model';
@@ -41,8 +45,21 @@ export class GridComponent implements OnInit {
     mode: 'singleRow'
   };
 
+  private readonly noteState = new Map<string, Record<string, Note | undefined>>();
+
   readonly maxSelected = 1;
   readonly selectedRowCount = signal(0);
+
+  private toApiNotesMap(): Record<string, Record<string, string>> {
+    return Object.fromEntries(
+      Array.from(this.noteState.entries()).map(([rowKey, notes]) => [
+        rowKey,
+        Object.fromEntries(
+          Object.entries(notes).filter(([, note]) => !!note).map(([columnKey, note]) => [columnKey, note?.text ?? ''])
+        )
+      ])
+    );
+  }
 
   hasSelectedRow(): boolean {
     return this.selectedRowCount() > 0;
@@ -59,7 +76,8 @@ export class GridComponent implements OnInit {
   }
 
   gridOptions: any = {
-    rowModelType: 'serverSide'
+    rowModelType: 'serverSide',
+    notesDataSource: this.createNotesDataSource()
   };
 
   columnDefs: ColDef[] = [
@@ -140,12 +158,79 @@ export class GridComponent implements OnInit {
   constructor(
     private toastr: ToastrService,
     protected gridAiService: GridAiService,
+    private screeningNotesService: ScreeningNotesService,
     private solrGridService: SolrGridService
   ) {}
+
+  private getRowKey(rowNode: IRowNode): string {
+    const rowData = rowNode?.data as Record<string, unknown> | undefined;
+    const securityId = rowData?.['securityId'];
+    return String(securityId ?? rowNode?.id ?? 'unknown-row');
+  }
+
+  private createNotesDataSource(): NotesDataSource {
+    return {
+      getNote: ({ rowNode, column }) => {
+        const rowKey = this.getRowKey(rowNode);
+        const columnKey = String(column.getColId());
+        const rowNotes = this.noteState.get(rowKey);
+        return rowNotes?.[columnKey];
+      },
+      setNote: ({ rowNode, column, note }) => {
+        const rowKey = this.getRowKey(rowNode);
+        const columnKey = String(column.getColId());
+        const rowNotes = this.noteState.get(rowKey) ?? {};
+
+        if (note) {
+          rowNotes[columnKey] = note;
+          this.noteState.set(rowKey, rowNotes);
+        } else {
+          delete rowNotes[columnKey];
+          if (Object.keys(rowNotes).length === 0) {
+            this.noteState.delete(rowKey);
+          } else {
+            this.noteState.set(rowKey, rowNotes);
+          }
+        }
+
+        this.screeningNotesService.saveScreeningNotes(this.portfolioManagerId, this.toApiNotesMap()).subscribe({
+          error: () => this.toastr.error('Failed to persist screening notes', 'Notes error')
+        });
+
+        this.gridApi?.refreshNotes?.({
+          rowNodes: [rowNode],
+          columns: [column]
+        });
+      }
+    };
+  }
 
   ngOnInit() {
     console.log('Grid component initialized');
     this.loadChatHistory();
+    this.loadScreeningNotes();
+  }
+
+  private loadScreeningNotes(): void {
+    this.screeningNotesService.getScreeningNotes(this.portfolioManagerId).subscribe({
+      next: (response) => {
+        this.noteState.clear();
+        Object.entries(response.notes ?? {}).forEach(([rowKey, columns]) => {
+          const noteMap: Record<string, Note | undefined> = {};
+          Object.entries(columns).forEach(([columnKey, text]) => {
+            if (text && typeof text === 'string') {
+              noteMap[columnKey] = { text };
+            }
+          });
+          if (Object.keys(noteMap).length > 0) {
+            this.noteState.set(rowKey, noteMap);
+          }
+        });
+      },
+      error: () => {
+        this.noteState.clear();
+      }
+    });
   }
 
   onGridReady(params: any) {

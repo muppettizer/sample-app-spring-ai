@@ -5,18 +5,7 @@ spring:
   profiles:
     default: google
 
-  # DevTools Restart configuration: exclude heavy/static/non-classpath paths from restart
-  devtools:
-    restart:
-      enabled: true
-      exclude:
-        - "static/**"
-        - "public/**"
-        - "**/node_modules/**"
-        - "frontend/**"
-        - "wiremock/**"
-        - ".git/**"
-
+  # Spring AI configuration - overridden by e.g spring.profiles.active=google
   ai:
     model:
       chat: none
@@ -25,6 +14,19 @@ spring:
           redis:
             host: localhost
             port: 6379
+
+  # DevTools Restart configuration: exclude heavy/static/non-classpath paths from restart
+  docker:
+    compose:
+      lifecycle-management: start-and-stop
+      start:
+        command: up
+      stop:
+        command: down
+        timeout: 10s
+        arguments:
+          - "--volumes"
+          - "--remove-orphans"
 
 server:
   port: 8081
@@ -51,3 +53,11 @@ management:
 #    chat-memory:
 #      # in-memory | redis
 #      type: in-memory
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure: DEBUG
+    org.springframework.ai.chat.memory: DEBUG
+    org.springframework.ai.model.chat.memory: DEBUG
+    org.springframework.ai.model.chat.memory.repository.redis: DEBUG
+    org.springframework.ai.chat.client.advisor: DEBUG
